@@ -80,11 +80,11 @@ export default function Home() {
             {/* CTA Buttons */}
             <motion.div
               variants={itemVariants}
-              className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
             >
-              <Link href="/store">
+              <Link href="/store" className="w-full sm:w-auto">
                 <motion.button
-                  className="px-8 py-4 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-all duration-300"
+                  className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-all duration-300"
                   whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(236, 72, 153, 0.3)' }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -93,9 +93,9 @@ export default function Home() {
                 </motion.button>
               </Link>
 
-              <Link href="/contact">
+              <Link href="/contact" className="w-full sm:w-auto">
                 <motion.button
-                  className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-lg transition-all duration-300"
+                  className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-lg transition-all duration-300 flex items-center justify-center"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
