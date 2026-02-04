@@ -19,7 +19,7 @@ export default function Profile() {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       if (!mounted) return;
       setUser(data.session?.user ?? null);
       if (data.session?.user) {
