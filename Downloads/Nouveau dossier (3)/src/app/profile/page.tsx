@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { createSupabaseClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
+import type { User, Session } from '@supabase/supabase-js';
 import { Mail, Phone, User as UserIcon, LogOut, Send, MessageSquare, AlertCircle, Loader } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,7 +28,7 @@ export default function Profile() {
       setIsLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event: string, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
       if (!mounted) return;
       setUser(session?.user ?? null);
       if (session?.user) {
