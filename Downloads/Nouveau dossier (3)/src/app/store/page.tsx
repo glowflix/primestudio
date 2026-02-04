@@ -1,9 +1,11 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
+import ImageModal from '@/components/ImageModal';
 
 const galleryImages = [
   {
@@ -59,10 +61,12 @@ const categories = [
   { id: 'event', label: 'Événements' },
 ];
 
-export default function StorePage() {
+export default function Store() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedImage, setSelectedImage] = useState<typeof galleryImages[0] | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+
+  const imagesList = galleryImages.map((img) => img.src);
 
   const filteredImages = useMemo(() => {
     return galleryImages.filter((image) => {
@@ -74,19 +78,24 @@ export default function StorePage() {
     });
   }, [selectedCategory, searchTerm]);
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
+        delayChildren: 0.2,
       },
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 },
+    },
   };
 
   return (
@@ -168,14 +177,15 @@ export default function StorePage() {
                 animate="visible"
                 key={selectedCategory + searchTerm}
               >
-                {filteredImages.map((image) => (
-                  <motion.div
-                    key={image.id}
-                    variants={itemVariants}
-                    layoutId={`gallery-${image.id}`}
-                    onClick={() => setSelectedImage(image)}
-                    className="cursor-pointer group relative overflow-hidden rounded-xl aspect-square"
-                  >
+                {filteredImages.map((image) => {
+                  const globalIndex = galleryImages.findIndex((img) => img.id === image.id);
+                  return (
+                    <motion.div
+                      key={image.id}
+                      variants={itemVariants}
+                      onClick={() => setSelectedImageIndex(globalIndex)}
+                      className="cursor-pointer group relative overflow-hidden rounded-xl aspect-square"
+                    >
                     {/* Image */}
                     <div className="relative w-full h-full bg-white/5 overflow-hidden rounded-xl">
                       <img
@@ -202,12 +212,13 @@ export default function StorePage() {
                       </div>
                     </div>
 
-                    {/* Category Tag */}
-                    <div className="absolute top-4 right-4 px-3 py-1 bg-pink-500 text-white text-xs font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      {image.category}
-                    </div>
-                  </motion.div>
-                ))}
+                      {/* Category Tag */}
+                      <div className="absolute top-4 right-4 px-3 py-1 bg-pink-500 text-white text-xs font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        {image.category}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </motion.div>
             ) : (
               <motion.div
@@ -223,56 +234,14 @@ export default function StorePage() {
         </div>
       </section>
 
-      {/* Lightbox Modal */}
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedImage(null)}
-          >
-            <motion.div
-              className="relative max-w-4xl w-full max-h-[90vh]"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <motion.button
-                onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 right-0 text-white hover:text-pink-400 transition-colors"
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <X size={32} />
-              </motion.button>
-
-              {/* Image */}
-              <div className="relative w-full h-full rounded-xl overflow-hidden">
-                <img
-                  src={selectedImage.src}
-                  alt={selectedImage.title}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-
-              {/* Info */}
-              <motion.div
-                className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <h2 className="text-3xl font-bold text-white mb-2">{selectedImage.title}</h2>
-                <p className="text-gray-300 text-lg">{selectedImage.description}</p>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={selectedImageIndex !== null}
+        images={imagesList}
+        currentIndex={selectedImageIndex ?? 0}
+        onClose={() => setSelectedImageIndex(null)}
+        onIndexChange={setSelectedImageIndex}
+      />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-pink-950/30 to-red-950/30">

@@ -3,8 +3,30 @@ import Navigation from "@/components/Navigation";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Prime Studio - Kinshasa",
-  description: "Prime Studio - Séances photos professionnelles",
+  title: "Prime Studio - Photographie Professionnelle Kinshasa",
+  description: "Prime Studio - Séances photos professionnelles pour portraits, branding, et contenu créatif. Services de photographie premium à Kinshasa.",
+  keywords: ["photographie", "kinshasa", "portraits", "branding", "séance photo"],
+  openGraph: {
+    title: "Prime Studio - Photographie Professionnelle",
+    description: "Découvrez nos services de photographie premium à Kinshasa. Portraits, branding, contenu social.",
+    url: "https://prime-studio.vercel.app",
+    siteName: "Prime Studio",
+    images: [
+      {
+        url: "/images/267A1009.jpg",
+        width: 800,
+        height: 600,
+        alt: "Prime Studio - Séance Portrait",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Prime Studio - Photographie Professionnelle",
+    description: "Photographie professionnelle à Kinshasa",
+    images: ["/images/267A1009.jpg"],
+  },
 };
 
 export default function RootLayout({
