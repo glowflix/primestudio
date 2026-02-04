@@ -8,13 +8,14 @@ import ServicesGrid from '@/components/ServicesGrid';
 import ContactButtons from '@/components/ContactButtons';
 import { Download } from 'lucide-react';
 
-// Galerie d'images exemple (utiliser des URLs réelles)
+// Galerie d'images depuis le dossier public
 const galleryImages = [
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1516738901601-2e1b62dc0c45?w=800&h=600&fit=crop',
+  '/images/267A1009.jpg',
+  '/images/267A1031.jpg',
+  '/images/267A1086.jpg',
+  '/images/267A1088.jpg',
+  '/images/Canon EOS 5D Mark III160.jpg',
+  '/images/Canon EOS 5D Mark III161_1.jpg',
 ];
 
 export default function Home() {
