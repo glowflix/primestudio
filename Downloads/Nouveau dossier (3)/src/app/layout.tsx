@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     siteName: "Prime Studio",
     images: [
       {
-        url: "/images/267A1009.jpg",
+        url: "/images/267A1009.webp",
         width: 800,
         height: 600,
         alt: "Prime Studio - Séance Portrait",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Prime Studio - Photographie Professionnelle",
     description: "Photographie professionnelle à Kinshasa",
-    images: ["/images/267A1009.jpg"],
+    images: ["/images/267A1009.webp"],
   },
 };
 
@@ -41,8 +41,8 @@ export default function RootLayout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#000000" />        {/* Preload critical images */}
-        <link rel="preload" as="image" href="/images/267A1009.jpg" />
-        <link rel="preload" as="image" href="/images/267A1031.jpg" />
+        <link rel="preload" as="image" href="/images/267A1009.webp" />
+        <link rel="preload" as="image" href="/images/267A1031.webp" />
         {/* DNS Prefetch for external resources */}
         <link rel="dns-prefetch" href="https://wa.me" />
         <link rel="dns-prefetch" href="https://www.facebook.com" />      </head>

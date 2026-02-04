@@ -8,12 +8,13 @@ import ServicesGrid from '@/components/ServicesGrid';
 import { ArrowRight, Camera, Sparkles } from 'lucide-react';
 
 const galleryImages = [
-  '/images/267A1009.jpg',
-  '/images/267A1031.jpg',
-  '/images/267A1086.jpg',
-  '/images/267A1088.jpg',
-  '/images/Canon EOS 5D Mark III160.jpg',
-  '/images/Canon EOS 5D Mark III161_1.jpg',
+  '/images/267A1009.webp',
+  '/images/267A1011.webp',
+  '/images/267A1031.webp',
+  '/images/267A1086.webp',
+  '/images/267A1088.webp',
+  '/images/Canon EOS 5D Mark III160.webp',
+  '/images/Canon EOS 5D Mark III161_1.webp',
 ];
 
 const containerVariants: Variants = {
