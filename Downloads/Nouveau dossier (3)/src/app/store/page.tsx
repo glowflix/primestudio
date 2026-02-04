@@ -3,8 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Search, X } from 'lucide-react';
-import { useState, useMemo } from 'react';
-import Image from 'next/image';
+import { useState, useMemo, useCallback } from 'react';
 import ImageModal from '@/components/ImageModal';
 
 const galleryImages = [
@@ -38,7 +37,7 @@ const galleryImages = [
   },
   {
     id: 5,
-    src: '/images/267A1088_alt.webp',
+    src: '/images/267A1011.webp',
     title: 'Contenu Social',
     category: 'social',
     description: 'Photos pour réseaux sociaux',
@@ -56,13 +55,6 @@ const galleryImages = [
     title: 'Événement Spécial',
     category: 'event',
     description: 'Couverture d\'événement spécial',
-  },
-  {
-    id: 8,
-    src: '/images/267A1011.webp',
-    title: 'Portrait Studio',
-    category: 'portrait',
-    description: 'Portrait professionnel',
   },
 ];
 
@@ -97,20 +89,23 @@ export default function Store() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
+        staggerChildren: 0.05,
+        delayChildren: 0,
       },
     },
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 },
+      transition: { duration: 0.3 },
     },
   };
+
+  const handleImageClick = useCallback((index: number) => {
+    setSelectedImageIndex(index);
+  }, []);
 
   return (
     <>
@@ -185,7 +180,7 @@ export default function Store() {
           <AnimatePresence mode="wait">
             {filteredImages.length > 0 ? (
               <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -194,43 +189,32 @@ export default function Store() {
                 {filteredImages.map((image) => {
                   const globalIndex = galleryImages.findIndex((img) => img.id === image.id);
                   return (
-                    <motion.div
+                    <motion.button
                       key={image.id}
                       variants={itemVariants}
-                      onClick={() => setSelectedImageIndex(globalIndex)}
-                      className="cursor-pointer group relative overflow-hidden rounded-xl aspect-square"
+                      onClick={() => handleImageClick(globalIndex)}
+                      className="cursor-pointer group relative overflow-hidden rounded-xl aspect-square border border-white/10 hover:border-pink-500/50 transition-colors duration-300"
+                      whileHover={{ borderColor: 'rgba(236, 72, 153, 0.5)' }}
                     >
-                    {/* Image */}
-                    <div className="relative w-full h-full bg-white/5 overflow-hidden rounded-xl">
                       <img
                         src={image.src}
                         alt={image.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
                       />
 
                       {/* Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                        <h3 className="text-xl font-bold text-white mb-2">{image.title}</h3>
-                        <p className="text-gray-200 text-sm">{image.description}</p>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                        <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">{image.title}</h3>
+                        <p className="text-gray-200 text-xs line-clamp-2">{image.description}</p>
                       </div>
-
-                      {/* Click indicator */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <motion.div
-                          className="bg-white/20 backdrop-blur px-4 py-2 rounded-full text-white font-medium"
-                          animate={{ scale: [1, 1.05, 1] }}
-                          transition={{ repeat: Infinity, duration: 2 }}
-                        >
-                          Voir plus
-                        </motion.div>
-                      </div>
-                    </div>
 
                       {/* Category Tag */}
-                      <div className="absolute top-4 right-4 px-3 py-1 bg-pink-500 text-white text-xs font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="absolute top-3 right-3 px-2 py-1 bg-pink-500 text-white text-xs font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         {image.category}
                       </div>
-                    </motion.div>
+                    </motion.button>
                   );
                 })}
               </motion.div>
