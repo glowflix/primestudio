@@ -28,7 +28,7 @@ export default function Profile() {
       setIsLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event: string, session) => {
       if (!mounted) return;
       setUser(session?.user ?? null);
       if (session?.user) {

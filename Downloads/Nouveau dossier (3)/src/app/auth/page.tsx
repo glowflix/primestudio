@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const supabase = createSupabaseClient();
@@ -30,7 +31,7 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      setSuccessMessage('Inscription réussie! Vérifiez votre email pour confirmer.');
+      setSuccessMessage('✅ Inscription réussie! Vérifiez votre email ou connectez-vous.');
       setEmail('');
       setPassword('');
     } catch (err) {
@@ -41,9 +42,29 @@ export default function LoginPage() {
     }
   };
 
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      setSuccessMessage('✅ Connecté avec succès!');
+      setEmail('');
+      setPassword('');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur connexion';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleSignUp = async () => {
     setError('');
-    setIsLoading(true);
+    setIsLoadingGoogle(true);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -57,7 +78,7 @@ export default function LoginPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la connexion Google';
       setError(errorMessage);
-      setIsLoading(false);
+      setIsLoadingGoogle(false);
     }
   };
 
@@ -101,7 +122,7 @@ export default function LoginPage() {
           )}
 
           {/* Email & Password Form */}
-          <form onSubmit={handleEmailSignUp} className="space-y-4">
+          <form className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
               <input
@@ -126,25 +147,49 @@ export default function LoginPage() {
               />
             </div>
 
-            <motion.button
-              type="submit"
-              disabled={isLoading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 disabled:from-gray-600 disabled:to-gray-600 text-white font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader size={18} className="animate-spin" />
-                  Chargement...
-                </>
-              ) : (
-                <>
-                  <Mail size={18} />
-                  S'inscrire / Se connecter
-                </>
-              )}
-            </motion.button>
+            <div className="flex gap-3">
+              <motion.button
+                type="button"
+                onClick={handleEmailSignIn}
+                disabled={isLoading}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-600 text-white font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader size={16} className="animate-spin" />
+                    Connexion...
+                  </>
+                ) : (
+                  <>
+                    <Mail size={16} />
+                    Se connecter
+                  </>
+                )}
+              </motion.button>
+
+              <motion.button
+                type="button"
+                onClick={handleEmailSignUp}
+                disabled={isLoading}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 disabled:from-gray-600 disabled:to-gray-600 text-white font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader size={16} className="animate-spin" />
+                    Création...
+                  </>
+                ) : (
+                  <>
+                    <Mail size={16} />
+                    Créer compte
+                  </>
+                )}
+              </motion.button>
+            </div>
           </form>
 
           {/* Divider */}
@@ -160,15 +205,15 @@ export default function LoginPage() {
           {/* Google Login */}
           <motion.button
             onClick={handleGoogleSignUp}
-            disabled={isLoading}
+            disabled={isLoadingGoogle}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="w-full px-4 py-3 bg-white/10 hover:bg-white/20 disabled:bg-white/5 text-white font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 border border-white/20"
           >
-            {isLoading ? (
+            {isLoadingGoogle ? (
               <>
                 <Loader size={18} className="animate-spin" />
-                Connexion en cours...
+                Redirection en cours...
               </>
             ) : (
               <>
