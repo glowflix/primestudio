@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Navigation from "@/components/Navigation";
 import BottomNavigation from "@/components/BottomNavigation";
 import "./globals.css";
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Prime Studio - Photographie Professionnelle",
     description: "Découvrez nos services de photographie premium à Kinshasa. Portraits, branding, contenu social.",
-    url: "https://prime-studio.vercel.app",
+    url: "https://primestudios.store",
     siteName: "Prime Studio",
     images: [
       {
@@ -31,6 +31,12 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#000000",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -40,13 +46,13 @@ export default function RootLayout({
     <html lang="fr">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />        {/* Preload critical images */}
+        {/* Preload critical images */}
         <link rel="preload" as="image" href="/images/267A1009.webp" />
         <link rel="preload" as="image" href="/images/267A1031.webp" />
         {/* DNS Prefetch for external resources */}
         <link rel="dns-prefetch" href="https://wa.me" />
-        <link rel="dns-prefetch" href="https://www.facebook.com" />      </head>
+        <link rel="dns-prefetch" href="https://www.facebook.com" />
+      </head>
       <body className="bg-black text-white">
         <Navigation />
         <BottomNavigation />

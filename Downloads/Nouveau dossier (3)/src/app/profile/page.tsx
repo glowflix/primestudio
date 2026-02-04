@@ -17,23 +17,32 @@ export default function Profile() {
   const supabase = createSupabaseClient();
 
   useEffect(() => {
-    checkSession();
-  }, []);
+    let mounted = true;
 
-  const checkSession = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setUser(data.session?.user ?? null);
+      if (data.session?.user) {
         loadMessages();
       }
-    } catch (err) {
-      console.error('Error checking session:', err);
-    } finally {
       setIsLoading(false);
-    }
-  };
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadMessages();
+      } else {
+        setMessages([]);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   const loadMessages = async () => {
     try {
@@ -70,7 +79,6 @@ export default function Profile() {
         .insert([
           {
             sender_id: user.id,
-            receiver_id: 'prime-studio',
             content: messageText,
             sender_email: user.email,
           },
