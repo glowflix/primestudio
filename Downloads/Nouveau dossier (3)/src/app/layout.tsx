@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Navigation from "@/components/Navigation";
+import BottomNavigation from "@/components/BottomNavigation";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,11 +40,16 @@ export default function RootLayout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-      </head>
+        <meta name="theme-color" content="#000000" />        {/* Preload critical images */}
+        <link rel="preload" as="image" href="/images/267A1009.jpg" />
+        <link rel="preload" as="image" href="/images/267A1031.jpg" />
+        {/* DNS Prefetch for external resources */}
+        <link rel="dns-prefetch" href="https://wa.me" />
+        <link rel="dns-prefetch" href="https://www.facebook.com" />      </head>
       <body className="bg-black text-white">
         <Navigation />
-        <main className="pt-20">
+        <BottomNavigation />
+        <main className="pt-0 md:pt-20">
           {children}
         </main>
 

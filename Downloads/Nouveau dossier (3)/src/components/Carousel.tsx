@@ -14,7 +14,6 @@ interface CarouselProps {
 export default function Carousel({ images, autoplay = true, interval = 5000 }: CarouselProps) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
-  const [isLoaded, setIsLoaded] = useState(true);
 
   useEffect(() => {
     if (!autoplay || images.length === 0) return;
@@ -78,7 +77,10 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
             src={images[current]}
             alt={`Slide ${current + 1}`}
             className="w-full h-full object-cover"
-            loading="lazy"
+            loading="eager"
+            decoding="async"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+
           />
         </motion.div>
       </AnimatePresence>
