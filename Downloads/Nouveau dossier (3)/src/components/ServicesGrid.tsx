@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { Users, Camera, Palette, Sparkles, TrendingUp, Zap } from 'lucide-react';
 
 const services = [
@@ -37,7 +38,7 @@ const services = [
 ];
 
 export default function ServicesGrid() {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -48,7 +49,7 @@ export default function ServicesGrid() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,

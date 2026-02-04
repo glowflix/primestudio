@@ -1,14 +1,12 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import QRCode from 'qrcode.react';
+import type { Variants } from 'framer-motion';
+import Link from 'next/link';
 import Carousel from '@/components/Carousel';
 import ServicesGrid from '@/components/ServicesGrid';
-import ContactButtons from '@/components/ContactButtons';
-import { Download } from 'lucide-react';
+import { ArrowRight, Camera, Sparkles } from 'lucide-react';
 
-// Galerie d'images depuis le dossier public
 const galleryImages = [
   '/images/267A1009.jpg',
   '/images/267A1031.jpg',
@@ -18,193 +16,186 @@ const galleryImages = [
   '/images/Canon EOS 5D Mark III161_1.jpg',
 ];
 
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8 },
+  },
+};
+
 export default function Home() {
-  const qrRef = useRef<HTMLDivElement>(null);
-  const [currentPageUrl, setCurrentPageUrl] = useState('https://prime-studio.vercel.app');
-
-  useEffect(() => {
-    setCurrentPageUrl(typeof window !== 'undefined' ? window.location.href : 'https://prime-studio.vercel.app');
-  }, []);
-
-  const phoneNumber = "+243895438484";
-  const whatsappMessage = "Bonjour! Je suis intéressé par les services de Prime Studio.";
-  const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappMessage)}`;
-
-  const downloadQR = () => {
-    if (qrRef.current) {
-      const canvas = qrRef.current.querySelector('canvas') as HTMLCanvasElement;
-      const url = canvas?.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'prime-studio-qr.png';
-      link.click();
-    }
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8 },
-    },
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <motion.div
-        className="max-w-6xl mx-auto px-4 py-12 md:py-20"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Header Hero */}
-        <motion.div className="text-center mb-16 md:mb-24" variants={itemVariants}>
+    <>
+      {/* Hero Section */}
+      <section className="min-h-screen relative overflow-hidden pt-10">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-pink-950/20 to-black -z-10" />
+        
+        {/* Animated background elements */}
+        <div className="absolute top-20 right-10 w-72 h-72 bg-pink-500/30 rounded-full blur-3xl opacity-20 animate-pulse" />
+        <div className="absolute bottom-20 left-10 w-96 h-96 bg-red-500/20 rounded-full blur-3xl opacity-20 animate-pulse" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="mb-6"
+            className="text-center space-y-8"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
           >
-            <h1 className="text-5xl md:text-7xl font-light tracking-tight text-white mb-2">
-              PRIME <span className="font-normal text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">STUDIO</span>
-            </h1>
-          </motion.div>
-          <motion.p
-            variants={itemVariants}
-            className="text-lg md:text-xl text-gray-400 mb-2 font-light"
-          >
-            Campagne Promotionnelle Spéciale
-          </motion.p>
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="h-1 w-20 bg-gradient-to-r from-pink-600 to-red-600 mx-auto mb-4 origin-left"
-          />
-          <motion.p variants={itemVariants} className="text-gray-500 text-sm">
-            Kinshasa • Gombé • Séances Photos Professionnelles
-          </motion.p>
-        </motion.div>
-
-        {/* Carousel Gallery */}
-        <motion.div className="mb-20" variants={itemVariants}>
-          <h2 className="text-2xl md:text-3xl font-light text-white mb-8 text-center">
-            Galerie de nos réalisations
-          </h2>
-          <Carousel images={galleryImages} autoplay interval={4000} />
-        </motion.div>
-
-        {/* Services Grid */}
-        <motion.div className="mb-20" variants={itemVariants}>
-          <h2 className="text-2xl md:text-3xl font-light text-white mb-12 text-center">
-            Nos Services
-          </h2>
-          <ServicesGrid />
-        </motion.div>
-
-        {/* Contact Section */}
-        <motion.div
-          className="bg-gradient-to-br from-white/5 to-white/0 backdrop-blur border border-white/10 rounded-2xl p-8 md:p-12 mb-20"
-          variants={itemVariants}
-        >
-          <h2 className="text-2xl md:text-3xl font-light text-white mb-8 text-center">
-            Nous Contacter
-          </h2>
-          <ContactButtons phoneNumber={phoneNumber} whatsappUrl={whatsappUrl} />
-        </motion.div>
-
-        {/* QR Code Section */}
-        <motion.div
-          className="bg-gradient-to-br from-white/5 to-white/0 backdrop-blur border border-white/10 rounded-2xl p-8 md:p-12 mb-12"
-          variants={itemVariants}
-        >
-          <div className="flex flex-col md:flex-row gap-8 items-center">
-            {/* QR Code */}
-            <motion.div
-              className="flex-1 flex flex-col items-center"
-              whileHover={{ scale: 1.02 }}
-            >
-              <p className="text-gray-300 text-sm mb-6 font-light">Scannez pour accéder directement</p>
-              <div
-                ref={qrRef}
-                className="bg-white p-6 rounded-xl shadow-2xl"
-              >
-                <QRCode
-                  value={currentPageUrl}
-                  size={200}
-                  level="H"
-                  includeMargin={true}
-                  bgColor="#ffffff"
-                  fgColor="#be123c"
-                />
-              </div>
-              <motion.button
-                onClick={downloadQR}
+            {/* Main Title */}
+            <motion.div variants={itemVariants} className="space-y-4">
+              <motion.div
+                className="inline-block"
                 whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300"
               >
-                <Download size={18} />
-                Télécharger QR Code
-              </motion.button>
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-pink-500/30 text-pink-400 text-sm font-medium">
+                  <Camera size={16} />
+                  Créateur d'Images Professionnelles
+                </span>
+              </motion.div>
+
+              <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+                <span className="block text-gradient">Prime Studio</span>
+                <span className="block text-white mt-2">À votre service</span>
+              </h1>
+
+              <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
+                Séances photos professionnelles spécialisées pour portraits, branding, et contenu créatif. Transformez votre image en Kinshasa.
+              </p>
             </motion.div>
 
-            {/* Info Text */}
+            {/* CTA Buttons */}
             <motion.div
-              className="flex-1"
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
             >
-              <h3 className="text-xl font-semibold text-white mb-4">Comment ça marche?</h3>
-              <ul className="space-y-3 text-gray-400 text-sm leading-relaxed">
-                <li className="flex gap-3">
-                  <span className="text-pink-600 font-bold">1.</span>
-                  <span>Scannez le QR Code avec votre téléphone</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-pink-600 font-bold">2.</span>
-                  <span>Vous accédez directement à notre page de contact</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-pink-600 font-bold">3.</span>
-                  <span>Cliquez sur l&apos;un de nos boutons de contact</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="text-pink-600 font-bold">4.</span>
-                  <span>Connectez-vous avec nous via WhatsApp, appel ou email</span>
-                </li>
-              </ul>
-            </motion.div>
-          </div>
-        </motion.div>
+              <Link href="/store">
+                <motion.button
+                  className="px-8 py-4 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-all duration-300"
+                  whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(236, 72, 153, 0.3)' }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Voir Notre Galerie
+                  <ArrowRight size={20} />
+                </motion.button>
+              </Link>
 
-        {/* Footer */}
-        <motion.div
-          className="text-center border-t border-white/10 pt-12"
-          variants={itemVariants}
-        >
-          <p className="text-gray-500 text-sm font-light mb-2">
-            © 2026 Prime Studio • Tous droits réservés
-          </p>
-          <p className="text-gray-600 text-xs">
-            Photographie professionnelle • Branding • Contenu Digital
-          </p>
-        </motion.div>
-      </motion.div>
-    </div>
+              <Link href="/contact">
+                <motion.button
+                  className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-lg transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Nous Contacter
+                </motion.button>
+              </Link>
+            </motion.div>
+          </motion.div>
+
+          {/* Gallery Preview */}
+          <motion.div
+            variants={itemVariants}
+            className="mt-20 pt-20"
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.4 }}
+          >
+            <h2 className="text-3xl font-bold text-center mb-12">Portfolio Récent</h2>
+            <Carousel images={galleryImages} />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section className="py-20 bg-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl font-bold mb-4">Nos Services</h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Une gamme complète de services photographiques professionnels adaptés à vos besoins
+            </p>
+          </motion.div>
+
+          <ServicesGrid />
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { number: '500+', label: 'Clients Satisfaits' },
+              { number: '1000+', label: 'Séances Réalisées' },
+              { number: '5★', label: 'Note Moyenne' },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                className="text-center p-8 rounded-lg glass"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: i * 0.1 }}
+              >
+                <div className="text-4xl font-bold text-gradient mb-2">
+                  {stat.number}
+                </div>
+                <p className="text-gray-400">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-950/30 to-red-950/30 -z-10" />
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="space-y-8"
+          >
+            <h2 className="text-4xl font-bold">Prêt à Commencer?</h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Contactez-nous dès aujourd'hui pour réserver votre séance et transformer votre vision en réalité.
+            </p>
+
+            <Link href="/contact">
+              <motion.button
+                className="px-10 py-4 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-lg inline-flex items-center gap-2 transition-all duration-300"
+                whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(236, 72, 153, 0.3)' }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Sparkles size={20} />
+                Commencer Maintenant
+              </motion.button>
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+    </>
   );
 }
