@@ -11,7 +11,7 @@ export default function BottomNavigation() {
   const navItems = [
     { href: '/', icon: Home, label: 'Accueil' },
     { href: '/store', icon: ShoppingBag, label: 'Galerie' },
-    { href: '/contact', icon: MessageSquare, label: 'Contact' },
+    { href: '/profile', icon: User, label: 'Profil' },
   ];
 
   return (

@@ -95,13 +95,13 @@ export default function Home() {
                 </motion.button>
               </Link>
 
-              <Link href="/contact" className="w-full sm:w-auto">
+              <Link href="/profile" className="w-full sm:w-auto">
                 <motion.button
                   className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-lg transition-all duration-300 flex items-center justify-center"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Nous Contacter
+                  Créer un Profil
                 </motion.button>
               </Link>
             </motion.div>

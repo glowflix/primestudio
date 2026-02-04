@@ -13,7 +13,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/', label: 'Accueil' },
     { href: '/store', label: 'Galerie' },
-    { href: '/contact', label: 'Contact' },
+    { href: '/profile', label: 'Profil' },
   ];
 
   const isActive = (href: string) => pathname === href;
