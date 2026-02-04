@@ -112,9 +112,8 @@ export default function ImageModal({
                   src={images[currentIndex]}
                   alt={`Photo ${currentIndex + 1}`}
                   initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  animate={{ opacity: 1, scale: zoom }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  animate={{ scale: zoom }}
                   className="max-w-full max-h-full object-contain"
                   style={{ transformOrigin: 'center center' }}
                 />
