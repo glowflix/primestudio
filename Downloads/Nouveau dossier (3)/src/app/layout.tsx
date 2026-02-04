@@ -15,9 +15,10 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/images/267A1009.webp",
-        width: 800,
-        height: 600,
+        width: 1200,
+        height: 630,
         alt: "Prime Studio - Séance Portrait",
+        type: "image/webp",
       },
     ],
     type: "website",

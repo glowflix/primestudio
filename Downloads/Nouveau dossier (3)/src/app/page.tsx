@@ -13,8 +13,9 @@ const galleryImages = [
   '/images/267A1031.webp',
   '/images/267A1086.webp',
   '/images/267A1088.webp',
-  '/images/Canon EOS 5D Mark III160.webp',
-  '/images/Canon EOS 5D Mark III161_1.webp',
+  '/images/267A1088_alt.webp',
+  '/images/canon_eos_5d_mk3_160.webp',
+  '/images/canon_eos_5d_mk3_161.webp',
 ];
 
 const containerVariants: Variants = {
