@@ -4,7 +4,7 @@ import QRCode from 'qrcode.react';
 import { useRef } from 'react';
 
 export default function Home() {
-  const qrRef = useRef();
+  const qrRef = useRef<HTMLDivElement>(null);
 
   const phoneNumber = "+243895438484";
   const whatsappMessage = "Bonjour! Je suis intéressé par les services de Prime Studio.";
@@ -12,12 +12,14 @@ export default function Home() {
   const currentPageUrl = typeof window !== 'undefined' ? window.location.href : 'https://prime-studio.vercel.app';
 
   const downloadQR = () => {
-    const canvas = qrRef.current?.querySelector('canvas') as HTMLCanvasElement;
-    const url = canvas?.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'prime-studio-qr.png';
-    link.click();
+    if (qrRef.current) {
+      const canvas = qrRef.current.querySelector('canvas') as HTMLCanvasElement;
+      const url = canvas?.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'prime-studio-qr.png';
+      link.click();
+    }
   };
 
   return (
