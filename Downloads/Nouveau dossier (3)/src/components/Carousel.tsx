@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -14,9 +14,10 @@ interface CarouselProps {
 export default function Carousel({ images, autoplay = true, interval = 5000 }: CarouselProps) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    if (!autoplay || images.length === 0) return;
+    if (!autoplay || images.length === 0 || isAnimating) return;
 
     const timer = setInterval(() => {
       setDirection(1);
@@ -24,11 +25,11 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
     }, interval);
 
     return () => clearInterval(timer);
-  }, [autoplay, interval, images.length]);
+  }, [autoplay, interval, images.length, isAnimating]);
 
   const slideVariants: Variants = {
     enter: (dir: number) => ({
-      x: dir > 0 ? 1000 : -1000,
+      x: dir > 0 ? 500 : -500,
       opacity: 0,
     }),
     center: {
@@ -38,16 +39,20 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
     },
     exit: (dir: number) => ({
       zIndex: 0,
-      x: dir < 0 ? 1000 : -1000,
+      x: dir < 0 ? 500 : -500,
       opacity: 0,
     }),
   };
 
-  const paginate = (newDirection: number) => {
-    if (images.length === 0) return;
+  const paginate = useCallback((newDirection: number) => {
+    if (images.length === 0 || isAnimating) return;
+    setIsAnimating(true);
     setDirection(newDirection);
     setCurrent((prev) => (prev + newDirection + images.length) % images.length);
-  };
+  }, [images.length, isAnimating]);
+
+  const handlePrevious = useCallback(() => paginate(-1), [paginate]);
+  const handleNext = useCallback(() => paginate(1), [paginate]);
 
   if (images.length === 0) {
     return (
@@ -68,9 +73,10 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
           animate="center"
           exit="exit"
           transition={{
-            x: { type: 'spring', stiffness: 300, damping: 30 },
-            opacity: { duration: 0.5 },
+            x: { type: 'tween', duration: 0.4, ease: 'easeInOut' },
+            opacity: { duration: 0.3 },
           }}
+          onAnimationComplete={() => setIsAnimating(false)}
           className="absolute inset-0"
         >
           <img
@@ -79,8 +85,6 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
             className="w-full h-full object-cover"
             loading="eager"
             decoding="async"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-
           />
         </motion.div>
       </AnimatePresence>
@@ -90,16 +94,18 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
 
       {/* Navigation buttons */}
       <button
-        onClick={() => paginate(-1)}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur text-white p-2 rounded-full transition-all duration-300 hover:scale-110"
+        onClick={handlePrevious}
+        disabled={isAnimating}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur text-white p-2 rounded-full transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Previous slide"
       >
         <ChevronLeft size={24} />
       </button>
 
       <button
-        onClick={() => paginate(1)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur text-white p-2 rounded-full transition-all duration-300 hover:scale-110"
+        onClick={handleNext}
+        disabled={isAnimating}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur text-white p-2 rounded-full transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Next slide"
       >
         <ChevronRight size={24} />
@@ -108,17 +114,19 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
       {/* Dots indicator */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
         {images.map((_, index) => (
-          <motion.button
+          <button
             key={index}
             onClick={() => {
-              setDirection(index > current ? 1 : -1);
-              setCurrent(index);
+              if (!isAnimating) {
+                setDirection(index > current ? 1 : -1);
+                setIsAnimating(true);
+                setCurrent(index);
+              }
             }}
-            className={`h-2 rounded-full transition-all duration-300 ${
+            disabled={isAnimating}
+            className={`h-2 rounded-full transition-all duration-300 disabled:opacity-50 ${
               index === current ? 'bg-white w-8' : 'bg-white/50 w-2'
             }`}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
           />
         ))}
       </div>

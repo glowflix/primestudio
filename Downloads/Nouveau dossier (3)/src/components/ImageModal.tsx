@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Share2, MessageCircle } from 'lucide-react';
 
@@ -23,10 +23,12 @@ export default function ImageModal({
 }: ImageModalProps) {
   const [zoom, setZoom] = useState(1);
   const [showShare, setShowShare] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const lastNavTimeRef = useRef(0);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
+      if (!isOpen || isTransitioning) return;
       if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowLeft') handlePrevious();
       if (e.key === 'ArrowRight') handleNext();
@@ -34,17 +36,29 @@ export default function ImageModal({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentIndex, images.length]);
+  }, [isOpen, currentIndex, images.length, isTransitioning, onClose]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
+    const now = Date.now();
+    if (now - lastNavTimeRef.current < 400) return;
+    lastNavTimeRef.current = now;
+    
+    setIsTransitioning(true);
     onIndexChange((currentIndex + 1) % images.length);
     setZoom(1);
-  };
+    setTimeout(() => setIsTransitioning(false), 400);
+  }, [currentIndex, images.length, onIndexChange]);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
+    const now = Date.now();
+    if (now - lastNavTimeRef.current < 400) return;
+    lastNavTimeRef.current = now;
+    
+    setIsTransitioning(true);
     onIndexChange((currentIndex - 1 + images.length) % images.length);
     setZoom(1);
-  };
+    setTimeout(() => setIsTransitioning(false), 400);
+  }, [currentIndex, images.length, onIndexChange]);
 
   const handleShare = (platform: 'whatsapp' | 'facebook') => {
     const url = typeof window !== 'undefined' ? window.location.href : 'https://prime-studio.vercel.app';
@@ -175,7 +189,8 @@ export default function ImageModal({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePrevious}
-                className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 rounded-full transition-all text-white"
+                disabled={isTransitioning}
+                className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 rounded-full transition-all text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={24} />
               </motion.button>
@@ -186,7 +201,8 @@ export default function ImageModal({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowShare(!showShare)}
-                  className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-all font-medium"
+                  disabled={isTransitioning}
+                  className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Share2 size={20} />
                   Partager
@@ -197,7 +213,8 @@ export default function ImageModal({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleNext}
-                className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 rounded-full transition-all text-white"
+                disabled={isTransitioning}
+                className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 rounded-full transition-all text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={24} />
               </motion.button>
