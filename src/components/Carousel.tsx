@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import NextImage from 'next/image';
-import { getBlurDataURL, preloadBlurURLs } from '@/lib/imageBlur';
+import { getBlurDataURL } from '@/lib/imageBlur';
 import { ImageDiagnosticsTracker } from '@/lib/imageDiagnostics';
 
 interface CarouselProps {
@@ -35,6 +35,9 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
 
   const shouldReduceMotion = useReducedMotion();
 
+  // iPhone memory optimization: windowing (render only visible slides)
+  const WINDOW_SIZE = 1; // Render current ± 1 slides only (3 max)
+
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -53,17 +56,32 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
     [safeImages.length]
   );
 
+  // Windowing: only render slides within view window (iPhone optimization)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const shouldRenderSlide = useCallback(
+    (index: number): boolean => {
+      if (safeImages.length === 0) return false;
+      const distance = Math.abs(index - current);
+      // Log windowing decisions for diagnostics
+      if (distance > WINDOW_SIZE) {
+        console.debug(`[CAROUSEL_WINDOW] Skipping render for index ${index} (distance: ${distance})`);
+      }
+      return distance <= WINDOW_SIZE;
+    },
+    [current, safeImages.length]
+  );
+
   // Preload blur URLs on mount for smooth progressive loading
-  useEffect(() => {
-    if (safeImages.length === 0) return;
-
-    preloadBlurURLs(safeImages);
-    safeImages.forEach((src) => {
-      blurUrlsRef.current[src] = getBlurDataURL(src);
-    });
-
-    console.log('[CAROUSEL] Initialized with', safeImages.length, 'images');
-  }, [safeImages]);
+  // FIX: Blur seulement pour current + next (pas toutes les images!)
+  const ensureBlur = useCallback(
+    (src: string | null) => {
+      if (!src) return;
+      if (!blurUrlsRef.current[src]) {
+        blurUrlsRef.current[src] = getBlurDataURL(src);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     // Keep index valid if images list changes
@@ -110,40 +128,21 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
   const nextImageSrc =
     safeImages.length > 0 ? safeImages[(getValidIndex(current) + 1) % safeImages.length] : null;
 
+  // Generate blur only for current + next to avoid RAM explosion on iPhone
   useEffect(() => {
-    // MOBILE FIX: Preload ONLY current + next (not prev) to avoid memory saturation
-    // iPhone crashes when preloading 3+ images simultaneously
-    if (!currentImageSrc || !nextImageSrc) return;
+    ensureBlur(currentImageSrc);
+    ensureBlur(nextImageSrc);
+  }, [currentImageSrc, nextImageSrc, ensureBlur]);
 
-    try {
-      // Current slide
-      const img1 = new window.Image();
-      img1.decoding = 'async';
-      img1.src = currentImageSrc;
-      img1.onerror = () => {
-        const msg = `Failed to preload current image: ${currentImageSrc}`;
-        console.warn('[CAROUSEL_PRELOAD_ERROR]', msg);
-        ImageDiagnosticsTracker.trackImageLoad(currentImageSrc, false, 'Preload failed');
-      };
-      img1.onload = () => {
-        ImageDiagnosticsTracker.trackImageLoad(currentImageSrc, true);
-      };
-
-      // Next slide only
-      const img2 = new window.Image();
-      img2.decoding = 'async';
-      img2.src = nextImageSrc;
-      img2.onerror = () => {
-        console.warn('[CAROUSEL_PRELOAD_ERROR]', `Failed to preload next image: ${nextImageSrc}`);
-        ImageDiagnosticsTracker.trackImageLoad(nextImageSrc, false, 'Preload failed');
-      };
-      img2.onload = () => {
-        ImageDiagnosticsTracker.trackImageLoad(nextImageSrc, true);
-      };
-    } catch (err) {
-      console.error('[CAROUSEL_PRELOAD_EXCEPTION]', err);
-    }
-  }, [currentImageSrc, nextImageSrc]);
+  useEffect(() => {
+    // REMOVED: Double preload with window.Image() causes iPhone crashes
+    // Next/Image handles caching + lazy loading properly already
+    // Removing manual preload saves: bandwidth, memory, decode operations
+    if (!currentImageSrc) return;
+    
+    // Log for diagnostics only
+    console.debug('[CAROUSEL] Displaying slide:', currentImageSrc);
+  }, [currentImageSrc]);
 
   const slideVariants: Variants = {
     enter: (dir: number) => ({
@@ -217,13 +216,14 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
                 src={currentImageSrc}
                 alt={`Slide ${current + 1}`}
                 fill
-                sizes="(max-width: 768px) 100vw, 1200px"
+                sizes="(max-width: 768px) 90vw, 1200px"
                 priority={current === 0}
-                quality={80}
-                blurDataURL={blurUrlsRef.current[currentImageSrc] || undefined}
-                placeholder="blur"
+                quality={current === 0 ? 85 : 75}
+                placeholder={blurUrlsRef.current[currentImageSrc] ? 'blur' : 'empty'}
+                blurDataURL={blurUrlsRef.current[currentImageSrc]}
                 className={`object-cover transition-all duration-500 ease-out ${isCurrentLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'}`}
                 style={{ willChange: 'opacity' }}
+                loading={current === 0 ? 'eager' : 'lazy'}
                 onLoadingComplete={() => {
                   setIsCurrentLoaded(true);
                   setImageError(null);

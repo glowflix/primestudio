@@ -41,6 +41,11 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<'overview' | 'gallery' | 'settings'>('overview');
   const [supabase, setSupabase] = useState<ReturnType<typeof createSupabaseClient> | null>(null);
 
+  // Gallery pagination (FIX for iPhone memory crash)
+  const GALLERY_PAGE_SIZE = 12; // Max 12 images per page on mobile
+  const [galleryPage, setGalleryPage] = useState(1);
+  const visiblePhotos = photos.slice(0, galleryPage * GALLERY_PAGE_SIZE);
+
   // Edit Mode
   const [isEditMode, setIsEditMode] = useState(false);
   const [editForm, setEditForm] = useState({ full_name: '', bio: '', phone: '' });
@@ -485,49 +490,73 @@ export default function Profile() {
                   </Link>
                 </motion.div>
               ) : (
-                <div className="grid md:grid-cols-3 gap-4">
-                  {photos.map((photo, idx) => (
-                    <motion.div
-                      key={photo.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="group relative bg-white/5 border border-white/10 rounded-lg overflow-hidden"
-                    >
-                      <div className="relative h-48 bg-black">
-                        <NextImage
-                          src={photo.image_url}
-                          alt={photo.title || 'Photo'}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                      <div className="p-4">
-                        {photo.title && <p className="font-semibold text-white mb-1">{photo.title}</p>}
-                        {photo.description && <p className="text-sm text-gray-400 mb-3">{photo.description}</p>}
-                        <div className="flex gap-2">
-                          <motion.button
-                            onClick={() => sharePhotoLink(photo)}
-                            whileHover={{ scale: 1.1 }}
-                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 rounded-lg transition"
-                          >
-                            {copiedLink === photo.id ? (
-                              <>
-                                <Check size={16} />
-                                Copié
-                              </>
-                            ) : (
-                              <>
-                                <Share2 size={16} />
-                                Partager
-                              </>
-                            )}
-                          </motion.button>
+                <>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {visiblePhotos.map((photo, idx) => (
+                      <motion.div
+                        key={photo.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: (idx % GALLERY_PAGE_SIZE) * 0.05 }}
+                        className="group relative bg-white/5 border border-white/10 rounded-lg overflow-hidden"
+                      >
+                        <div className="relative h-48 bg-black">
+                          <NextImage
+                            src={photo.image_url}
+                            alt={photo.title || 'Photo'}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 400px"
+                            quality={75}
+                            className="object-cover group-hover:scale-110 transition-transform duration-300"
+                            loading={idx < 6 ? 'eager' : 'lazy'}
+                            priority={idx < 6}
+                          />
                         </div>
-                      </div>
+                        <div className="p-4">
+                          {photo.title && <p className="font-semibold text-white mb-1">{photo.title}</p>}
+                          {photo.description && <p className="text-sm text-gray-400 mb-3">{photo.description}</p>}
+                          <div className="flex gap-2">
+                            <motion.button
+                              onClick={() => sharePhotoLink(photo)}
+                              whileHover={{ scale: 1.1 }}
+                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 rounded-lg transition"
+                            >
+                              {copiedLink === photo.id ? (
+                                <>
+                                  <Check size={16} />
+                                  Copié
+                                </>
+                              ) : (
+                                <>
+                                  <Share2 size={16} />
+                                  Partager
+                                </>
+                              )}
+                            </motion.button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Load More Button - FIX for iPhone memory */}
+                  {visiblePhotos.length < photos.length && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex justify-center pt-6"
+                    >
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setGalleryPage((p) => p + 1)}
+                        className="px-6 py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-pink-500/50 transition"
+                      >
+                        Charger plus ({visiblePhotos.length}/{photos.length})
+                      </motion.button>
                     </motion.div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </motion.div>
           )}
