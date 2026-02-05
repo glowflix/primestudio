@@ -27,14 +27,25 @@ export const IMAGE_QUALITY_SETTINGS = {
 };
 
 export const IMAGE_LOADING_STRATEGY = {
-  // Detect slow connections
+  // Detect slow connections - with fallback for iPhone Safari
   isSlowConnection: () => {
     if (typeof window === 'undefined') return false;
-    if ('connection' in navigator) {
-      const conn = (navigator as Navigator & { connection?: { saveData: boolean; effectiveType: string } }).connection;
-      return conn?.saveData || conn?.effectiveType === '3g' || conn?.effectiveType === '4g';
+    try {
+      // iPhone Safari may not have navigator.connection
+      if ('connection' in navigator) {
+        const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+        if (conn) {
+          const effectiveType = conn.effectiveType ?? '4g';
+          const saveData = conn.saveData ?? false;
+          return saveData || effectiveType === '3g' || effectiveType === '4g';
+        }
+      }
+      // Fallback: assume 4g on iPhone/Safari
+      return false;
+    } catch (err) {
+      console.warn('Error detecting connection:', err);
+      return false; // Safe fallback
     }
-    return false;
   },
 
   // Get appropriate image size for device
@@ -50,29 +61,60 @@ export const IMAGE_LOADING_STRATEGY = {
   },
 };
 
-// Preload image with timeout
+// Preload image with timeout - NEVER USE IN LOOPS!
+// Use: preload max 1-2 images (current + next only)
 export async function preloadImageWithTimeout(
   src: string,
   timeout: number = 3000
 ): Promise<boolean> {
   return new Promise((resolve) => {
-    const img = new window.Image();
-    img.decoding = 'async';
+    try {
+      const img = new window.Image();
+      img.decoding = 'async';
 
-    const timeoutId = setTimeout(() => {
+      const timeoutId = setTimeout(() => {
+        resolve(false);
+      }, timeout);
+
+      img.onload = () => {
+        clearTimeout(timeoutId);
+        resolve(true);
+      };
+
+      img.onerror = () => {
+        clearTimeout(timeoutId);
+        resolve(false);
+      };
+
+      img.src = src;
+    } catch (err) {
+      console.warn(`Preload error for ${src}:`, err);
       resolve(false);
-    }, timeout);
-
-    img.onload = () => {
-      clearTimeout(timeoutId);
-      resolve(true);
-    };
-
-    img.onerror = () => {
-      clearTimeout(timeoutId);
-      resolve(false);
-    };
-
-    img.src = src;
+    }
   });
+}
+
+// SAFE preload for carousel: max 2 images only (current + next)
+export function safePreloadAdjacentImages(currentSrc: string, nextSrc?: string): void {
+  if (!currentSrc) return;
+  
+  // Current image
+  try {
+    const img1 = new window.Image();
+    img1.decoding = 'async';
+    img1.src = currentSrc;
+  } catch (err) {
+    console.warn(`Could not preload current image:`, err);
+  }
+  
+  // Only preload NEXT if provided
+  if (nextSrc) {
+    try {
+      const img2 = new window.Image();
+      img2.decoding = 'async';
+      img2.src = nextSrc;
+    } catch (err) {
+      console.warn(`Could not preload next image:`, err);
+    }
+  }
 }

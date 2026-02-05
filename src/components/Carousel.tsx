@@ -60,24 +60,33 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
   }, [autoplay, interval, safeImages.length, isAnimating]);
 
   useEffect(() => {
-    // Preload current + adjacent images to reduce flicker/blank frames.
+    // MOBILE FIX: Preload ONLY current + next (not prev) to avoid memory saturation
+    // iPhone crashes when preloading 3+ images simultaneously
     if (safeImages.length === 0) return;
 
     const currentSrc = safeImages[current];
     const nextSrc = safeImages[(current + 1) % safeImages.length];
-    const prevSrc = safeImages[(current - 1 + safeImages.length) % safeImages.length];
 
-    [currentSrc, nextSrc, prevSrc]
-      .filter(Boolean)
-      .forEach((src) => {
-        const img = new window.Image();
-        img.decoding = 'async';
-        img.src = src;
-        // Add error handler for failed image loads
-        img.onerror = () => {
-          console.warn(`Failed to preload image: ${src}`);
-        };
-      });
+    // Safely preload exactly 2 images max
+    try {
+      // Current slide
+      const img1 = new window.Image();
+      img1.decoding = 'async';
+      img1.src = currentSrc;
+      img1.onerror = () => {
+        console.warn(`Failed to preload current image: ${currentSrc}`);
+      };
+
+      // Next slide only
+      const img2 = new window.Image();
+      img2.decoding = 'async';
+      img2.src = nextSrc;
+      img2.onerror = () => {
+        console.warn(`Failed to preload next image: ${nextSrc}`);
+      };
+    } catch (err) {
+      console.warn('Error preloading carousel images:', err);
+    }
   }, [current, safeImages]);
 
   const slideVariants: Variants = {
