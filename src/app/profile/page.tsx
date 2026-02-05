@@ -14,12 +14,23 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<'profile' | 'messages'>('profile');
   const [messageText, setMessageText] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
-  const supabase = createSupabaseClient();
+  const [supabase, setSupabase] = useState<ReturnType<typeof createSupabaseClient> | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
+    let client: ReturnType<typeof createSupabaseClient> | null = null;
+    try {
+      client = createSupabaseClient();
+      setSupabase(client);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Supabase configuration error';
+      setError(errorMessage);
+      setIsLoading(false);
+      return;
+    }
+
+    client.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       if (!mounted) return;
       setUser(data.session?.user ?? null);
       if (data.session?.user) {
@@ -28,7 +39,7 @@ export default function Profile() {
       setIsLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
+    const { data: sub } = client.auth.onAuthStateChange((_event: string, session: Session | null) => {
       if (!mounted) return;
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -46,6 +57,7 @@ export default function Profile() {
 
   const loadMessages = async () => {
     try {
+      if (!supabase) return;
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
@@ -74,6 +86,7 @@ export default function Profile() {
     setIsLoading(true);
 
     try {
+      if (!supabase) throw new Error('Supabase is not ready');
       const { error: err } = await supabase
         .from('messages')
         .insert([
@@ -99,6 +112,7 @@ export default function Profile() {
   const handleLogout = async () => {
     setIsLoading(true);
     try {
+      if (!supabase) throw new Error('Supabase is not ready');
       await supabase.auth.signOut();
       setUser(null);
       setMessages([]);

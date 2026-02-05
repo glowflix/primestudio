@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import { motion } from 'framer-motion';
 import { Mail, Chrome, AlertCircle, Loader } from 'lucide-react';
@@ -12,7 +12,16 @@ export default function LoginPage() {
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const supabase = createSupabaseClient();
+  const [supabase, setSupabase] = useState<ReturnType<typeof createSupabaseClient> | null>(null);
+
+  useEffect(() => {
+    try {
+      setSupabase(createSupabaseClient());
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Supabase configuration error';
+      setError(errorMessage);
+    }
+  }, []);
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +30,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      if (!supabase) throw new Error('Supabase is not ready');
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -49,6 +59,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      if (!supabase) throw new Error('Supabase is not ready');
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       setSuccessMessage('✅ Connecté avec succès!');
@@ -67,6 +78,7 @@ export default function LoginPage() {
     setIsLoadingGoogle(true);
 
     try {
+      if (!supabase) throw new Error('Supabase is not ready');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
