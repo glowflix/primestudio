@@ -34,7 +34,7 @@ export default function ContactButtons({ phoneNumber, whatsappUrl }: ContactButt
     {
       icon: Globe,
       label: 'Visiter le Site',
-      href: 'https://prime-studio.vercel.app',
+      href: 'https://primestudios.vercel.app',
       gradient: 'from-purple-500 to-purple-600',
       hoverGradient: 'from-purple-600 to-purple-700',
     },

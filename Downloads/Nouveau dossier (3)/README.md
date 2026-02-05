@@ -52,7 +52,7 @@ npm start
 
 ## 🔗 Lien de Déploiement
 
-https://prime-studio.vercel.app
+https://primestudios.vercel.app
 
 ## 📞 Contact
 

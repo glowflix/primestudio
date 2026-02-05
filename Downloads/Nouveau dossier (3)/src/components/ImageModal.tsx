@@ -61,7 +61,7 @@ export default function ImageModal({
   }, [currentIndex, images.length, onIndexChange]);
 
   const handleShare = (platform: 'whatsapp' | 'facebook') => {
-    const url = typeof window !== 'undefined' ? window.location.href : 'https://prime-studio.vercel.app';
+    const url = typeof window !== 'undefined' ? window.location.href : 'https://primestudios.vercel.app';
     const imageUrl = `${url}${images[currentIndex]}`;
     
     if (platform === 'whatsapp') {
