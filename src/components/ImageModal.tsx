@@ -27,6 +27,12 @@ export default function ImageModal({
     [images]
   );
 
+  // ✅ Detect mobile to prevent aggressive preload
+  const isMobile = useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  }, []);
+
   const clampedIndex = useMemo(() => {
     if (safeImages.length === 0) return 0;
     if (Number.isNaN(currentIndex)) return 0;
@@ -37,6 +43,7 @@ export default function ImageModal({
   const [showShare, setShowShare] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [firstPriority, setFirstPriority] = useState(false);
   const lastNavTimeRef = useRef(0);
   const transitionTimeoutRef = useRef<number | null>(null);
 
@@ -55,8 +62,15 @@ export default function ImageModal({
       setZoom(1);
       setIsTransitioning(false);
       setIsImageLoaded(false);
+      setFirstPriority(false);
+    } else {
+      setFirstPriority(true);
+      const t = window.setTimeout(() => setFirstPriority(false), 1200);
+      return () => window.clearTimeout(t);
     }
   }, [isOpen]);
+
+  const MAX_ZOOM = isMobile ? 2 : 3;
 
   const handleNext = useCallback(() => {
     const now = Date.now();
@@ -72,7 +86,7 @@ export default function ImageModal({
     setZoom(1);
     if (transitionTimeoutRef.current) window.clearTimeout(transitionTimeoutRef.current);
     transitionTimeoutRef.current = window.setTimeout(() => setIsTransitioning(false), 400);
-  }, [clampedIndex, safeImages.length, onIndexChange]);
+  }, [clampedIndex, safeImages.length, onIndexChange, isMobile]);
 
   const handlePrevious = useCallback(() => {
     const now = Date.now();
@@ -96,22 +110,23 @@ export default function ImageModal({
   }, [isOpen, clampedIndex]);
 
   useEffect(() => {
-    // Preload current + adjacent images to make navigation feel instant.
+    // ✅ iPhone: no preload adjacent (prevents memory saturation crash)
     if (!isOpen) return;
     if (safeImages.length === 0) return;
+    if (isMobile) return; // Skip preload on iPhone/iPad
 
+    // Desktop only: preload current + next (not prev)
     const currentSrc = safeImages[clampedIndex];
     const nextSrc = safeImages[(clampedIndex + 1) % safeImages.length];
-    const prevSrc = safeImages[(clampedIndex - 1 + safeImages.length) % safeImages.length];
 
-    [currentSrc, nextSrc, prevSrc]
+    [currentSrc, nextSrc]
       .filter(Boolean)
       .forEach((src) => {
         const img = new window.Image();
         img.decoding = 'async';
         img.src = src;
       });
-  }, [isOpen, clampedIndex, safeImages]);
+  }, [isOpen, clampedIndex, safeImages, isMobile]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -228,8 +243,11 @@ export default function ImageModal({
                     src={safeImages[clampedIndex]}
                     alt={`Photo ${clampedIndex + 1}`}
                     fill
-                    sizes="100vw"
-                    priority={isOpen}
+                    sizes="(max-width: 768px) 100vw, 1400px"
+                    quality={isMobile ? 70 : 82}
+                    priority={firstPriority && !isMobile}
+                    loading={firstPriority ? 'eager' : 'lazy'}
+                    placeholder="empty"
                     style={{ objectFit: 'contain' }}
                     draggable={false}
                     onLoadingComplete={() => setIsImageLoaded(true)}
@@ -266,7 +284,7 @@ export default function ImageModal({
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => setZoom(Math.min(zoom + 0.2, 3))}
+                  onClick={() => setZoom(Math.min(zoom + 0.2, MAX_ZOOM))}
                   className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
                 >
                   <ZoomIn size={20} />

@@ -16,6 +16,7 @@ interface ImageDiagnostics {
 export class ImageDiagnosticsTracker {
   private static diagnostics: ImageDiagnostics[] = [];
   private static maxLogs = 50;
+  private static startTimes: Record<string, number> = {};
 
   static trackImageLoad(src: string, success: boolean, error?: string, loadTime?: number) {
     const isMobile = this.isMobileDevice();
@@ -42,6 +43,19 @@ export class ImageDiagnosticsTracker {
       mobile: isMobile,
       error,
     });
+  }
+
+  // Start timing for an image load
+  static start(src: string): void {
+    this.startTimes[src] = performance.now();
+  }
+
+  // End timing and record diagnostic
+  static end(src: string, success: boolean, error?: string): void {
+    const start = this.startTimes[src];
+    const loadTime = start ? Math.round(performance.now() - start) : undefined;
+    delete this.startTimes[src];
+    this.trackImageLoad(src, success, error, loadTime);
   }
 
   static isMobileDevice(): boolean {
@@ -106,12 +120,21 @@ export class ImageDiagnosticsTracker {
 
 /**
  * Verify if image path is correct
+ * Fallback to GET with Range header if HEAD fails (some servers don't allow HEAD)
  */
 export async function verifyImagePath(src: string): Promise<boolean> {
   try {
-    const response = await fetch(src, { method: 'HEAD' });
+    let response = await fetch(src, { method: 'HEAD' });
+    
+    // Fallback for servers that don't support HEAD (405) or opaque responses
+    if (response.status === 405 || response.type === 'opaque') {
+      response = await fetch(src, {
+        method: 'GET',
+        headers: { Range: 'bytes=0-0' },
+      });
+    }
+    
     const exists = response.ok;
-
     console.log(`[IMAGE_VERIFY] ${src}: ${exists ? '✅ EXISTS' : '❌ NOT FOUND'}`, {
       status: response.status,
       statusText: response.statusText,

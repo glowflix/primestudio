@@ -505,8 +505,8 @@ export default function Profile() {
                             src={photo.image_url}
                             alt={photo.title || 'Photo'}
                             fill
-                            sizes="(max-width: 768px) 100vw, 400px"
-                            quality={75}
+                            sizes="(max-width: 768px) 100%, (max-width: 1200px) 50%, 33%"
+                            quality={70}
                             className="object-cover group-hover:scale-110 transition-transform duration-300"
                             loading={idx < 6 ? 'eager' : 'lazy'}
                             priority={idx < 6}

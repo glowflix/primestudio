@@ -28,20 +28,22 @@ export const IMAGE_QUALITY_SETTINGS = {
 
 export const IMAGE_LOADING_STRATEGY = {
   // Detect slow connections - with fallback for iPhone Safari
+  // FIXED: 4g is NOT slow! Only 2g/3g are slow connections
   isSlowConnection: () => {
     if (typeof window === 'undefined') return false;
     try {
-      // iPhone Safari may not have navigator.connection
-      if ('connection' in navigator) {
-        const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-        if (conn) {
-          const effectiveType = conn.effectiveType ?? '4g';
-          const saveData = conn.saveData ?? false;
-          return saveData || effectiveType === '3g' || effectiveType === '4g';
-        }
-      }
-      // Fallback: assume 4g on iPhone/Safari
-      return false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nav = navigator as any;
+      const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+      if (!conn) return false;
+
+      const effectiveType = conn.effectiveType ?? '4g';
+      const saveData = !!conn.saveData;
+      // Check downlink speed if available (more accurate)
+      const downlink = typeof conn.downlink === 'number' ? conn.downlink : 10;
+
+      // Only 2g/3g are slow, not 4g
+      return saveData || effectiveType === '2g' || effectiveType === '3g' || downlink < 1.5;
     } catch (err) {
       console.warn('Error detecting connection:', err);
       return false; // Safe fallback
