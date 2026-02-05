@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import NextImage from 'next/image';
+import { getBlurDataURL, preloadBlurURLs } from '@/lib/imageBlur';
 
 interface CarouselProps {
   images: string[];
@@ -22,6 +23,15 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
   const [isCurrentLoaded, setIsCurrentLoaded] = useState(false);
 
   const autoplayTimerRef = useRef<number | null>(null);
+  const blurUrlsRef = useRef<Record<string, string>>({});
+
+  // Preload blur URLs on mount for smooth progressive loading
+  useEffect(() => {
+    preloadBlurURLs(safeImages);
+    safeImages.forEach((src) => {
+      blurUrlsRef.current[src] = getBlurDataURL(src);
+    });
+  }, [safeImages]);
 
   useEffect(() => {
     // Keep index valid if images list changes.
@@ -153,7 +163,10 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
               fill
               sizes="(max-width: 768px) 100vw, 1200px"
               priority={current === 0}
-              className={`object-cover transition-opacity duration-300 ${isCurrentLoaded ? 'opacity-100' : 'opacity-0'}`}
+              quality={80}
+              blurDataURL={blurUrlsRef.current[safeImages[current]]}
+              placeholder="blur"
+              className={`object-cover transition-all duration-500 ease-out ${isCurrentLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'}`}
               style={{ willChange: 'opacity' }}
               onLoadingComplete={() => setIsCurrentLoaded(true)}
               onError={() => {

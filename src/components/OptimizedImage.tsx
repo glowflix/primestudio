@@ -15,6 +15,7 @@ interface OptimizedImageProps {
   className?: string;
   onError?: () => void;
   showLoader?: boolean;
+  blurDataURL?: string; // Low quality placeholder
 }
 
 export default function OptimizedImage({
@@ -28,14 +29,15 @@ export default function OptimizedImage({
   className = '',
   onError,
   showLoader = true,
+  blurDataURL, // Use Instagram-style blur-up loading
 }: OptimizedImageProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isShowing, setIsShowing] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [imageSrc, setImageSrc] = useState(src);
 
   useEffect(() => {
     setImageSrc(src);
-    setIsLoaded(false);
+    setIsShowing(false);
     setHasError(false);
   }, [src]);
 
@@ -46,7 +48,8 @@ export default function OptimizedImage({
   };
 
   const handleImageLoad = () => {
-    setIsLoaded(true);
+    // Small delay for smooth transition (Instagram effect)
+    setTimeout(() => setIsShowing(true), 50);
   };
 
   if (hasError) {
@@ -58,12 +61,31 @@ export default function OptimizedImage({
   }
 
   return (
-    <>
-      {showLoader && !isLoaded && (
-        <div className={`absolute inset-0 bg-gray-900 flex items-center justify-center z-10 animate-pulse`}>
-          <Loader size={24} className="text-pink-500 animate-spin" />
+    <div className="relative w-full h-full overflow-hidden bg-gray-900">
+      {/* Placeholder with blur effect - shows while loading */}
+      {!isShowing && blurDataURL && (
+        <Image
+          src={blurDataURL}
+          alt={alt}
+          fill={fill}
+          width={width}
+          height={height}
+          priority={false}
+          sizes={sizes}
+          quality={50}
+          className={`${className} blur-sm scale-110 object-cover`}
+          decoding="async"
+        />
+      )}
+
+      {/* Loading spinner - Instagram style */}
+      {showLoader && !isShowing && (
+        <div className="absolute inset-0 flex items-center justify-center z-10 backdrop-blur-xs">
+          <Loader size={28} className="text-pink-500 animate-spin" />
         </div>
       )}
+
+      {/* Main high-quality image with fade-in transition */}
       <Image
         src={imageSrc}
         alt={alt}
@@ -72,12 +94,19 @@ export default function OptimizedImage({
         height={height}
         priority={priority}
         sizes={sizes}
-        quality={fill ? 75 : 80}
+        quality={fill ? 80 : 85}
         onError={handleImageError}
         onLoadingComplete={handleImageLoad}
-        className={`${className} ${!isLoaded ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        placeholder={blurDataURL ? 'blur' : 'empty'}
+        blurDataURL={blurDataURL}
+        className={`
+          ${className}
+          ${isShowing ? 'opacity-100 blur-0' : 'opacity-0 blur-md'}
+          transition-all duration-500 ease-out
+          object-cover
+        `}
         decoding="async"
       />
-    </>
+    </div>
   );
 }
