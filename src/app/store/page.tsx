@@ -63,8 +63,6 @@ const categories = [
   { id: 'all', label: 'Tous' },
   { id: 'portrait', label: 'Portraits' },
   { id: 'fashion', label: 'Mode' },
-  { id: 'branding', label: 'Branding' },
-  { id: 'social', label: 'Social Media' },
   { id: 'event', label: 'Événements' },
 ];
 
@@ -110,78 +108,66 @@ export default function Store() {
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="py-20 relative overflow-hidden">
+      {/* Hero Section - Hidden on mobile, shown on desktop */}
+      <section className="hidden md:block py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-950/30 to-red-950/30 -z-10" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="text-center space-y-4 mb-12"
+            className="text-center space-y-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-5xl md:text-6xl font-bold">Notre Galerie</h1>
-            <p className="text-xl text-gray-400">
-              Découvrez nos meilleures créations et projets réalisés
+            <h1 className="text-4xl md:text-5xl font-bold">Notre Galerie</h1>
+            <p className="text-lg text-gray-400">
+              Découvrez nos meilleures créations
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Search and Filter Section - STICKY LIKE INSTAGRAM */}
-      <section className="sticky top-20 z-50 bg-gradient-to-b from-black via-black/95 to-black/80 backdrop-blur border-b border-white/10 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Search and Filter Section - STICKY AT TOP */}
+      <section className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-white/10 shadow-xl">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 md:py-4">
           {/* Search Bar */}
-          <motion.div
-            className="mb-6 relative"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Rechercher une photo..."
+              placeholder="Rechercher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-pink-500 focus:outline-none transition-all text-white placeholder-gray-500 font-medium"
+              className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-full focus:border-pink-500 focus:outline-none transition-all text-white placeholder-gray-500 text-sm"
             />
-          </motion.div>
+          </div>
 
-          {/* Category Filters - Instagram style horizontal scroll */}
-          <motion.div
-            className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
+          {/* Category Filters - Compact horizontal scroll */}
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {categories.map((cat) => (
-              <motion.button
+              <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                   selectedCategory === cat.id
-                    ? 'bg-gradient-to-r from-pink-500 to-red-500 text-white shadow-lg shadow-pink-500/30'
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    ? 'bg-gradient-to-r from-pink-500 to-red-500 text-white'
+                    : 'bg-white/10 text-gray-300 active:bg-white/20'
                 }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 {cat.label}
-              </motion.button>
+              </button>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Gallery Grid - 2 COLUMNS ON MOBILE LIKE INSTAGRAM */}
-      <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Gallery Grid - 2 COLUMNS ON MOBILE */}
+      <section className="py-4 md:py-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
             {filteredImages.length > 0 ? (
               <motion.div
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4 lg:gap-6"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 md:gap-4"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -194,15 +180,14 @@ export default function Store() {
                       key={image.id}
                       variants={itemVariants}
                       onClick={() => handleImageClick(globalIndex)}
-                      className="cursor-pointer group relative overflow-hidden rounded-lg md:rounded-xl aspect-square border border-white/10 hover:border-pink-500/50 transition-colors duration-300"
-                      whileHover={{ borderColor: 'rgba(236, 72, 153, 0.5)' }}
+                      className="cursor-pointer group relative overflow-hidden rounded-md md:rounded-xl aspect-square"
                     >
                       <div className="relative w-full h-full">
                         <Image
                           src={image.src}
                           alt={image.title}
                           fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                           quality={70}
                           priority={false}
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -210,14 +195,14 @@ export default function Store() {
                         />
                       </div>
 
-                      {/* Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                        <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">{image.title}</h3>
-                        <p className="text-gray-200 text-xs line-clamp-2">{image.description}</p>
+                      {/* Overlay - Only on hover/desktop */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 md:p-4">
+                        <h3 className="text-sm md:text-lg font-bold text-white line-clamp-1">{image.title}</h3>
+                        <p className="text-gray-200 text-xs hidden md:block line-clamp-1">{image.description}</p>
                       </div>
 
-                      {/* Category Tag */}
-                      <div className="absolute top-3 right-3 px-2 py-1 bg-pink-500 text-white text-xs font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {/* Category Tag - Hidden on mobile */}
+                      <div className="hidden md:block absolute top-2 right-2 px-2 py-0.5 bg-pink-500/90 text-white text-xs font-medium rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                         {image.category}
                       </div>
                     </motion.button>
@@ -226,12 +211,12 @@ export default function Store() {
               </motion.div>
             ) : (
               <motion.div
-                className="text-center py-20"
+                className="text-center py-16"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <p className="text-xl text-gray-400">Aucune photo trouvée</p>
+                <p className="text-lg text-gray-400">Aucune photo trouvée</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -247,29 +232,32 @@ export default function Store() {
         onIndexChange={(index) => setSelectedImageIndex(index)}
       />
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-pink-950/30 to-red-950/30">
+      {/* CTA Section - Hidden on mobile */}
+      <section className="hidden md:block py-16 bg-gradient-to-r from-pink-950/30 to-red-950/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="space-y-6"
+            className="space-y-4"
           >
-            <h2 className="text-4xl font-bold">Vous aimez nos travaux?</h2>
-            <p className="text-gray-400 text-lg">
-              Contactez-nous pour réserver votre séance photo aujourd&apos;hui
+            <h2 className="text-3xl font-bold">Vous aimez nos travaux?</h2>
+            <p className="text-gray-400">
+              Contactez-nous pour réserver votre séance photo
             </p>
             <a
               href="/contact"
-              className="inline-block px-8 py-4 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-lg transition-all duration-300"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-lg transition-all"
             >
-              Réserver Maintenant
+              Réserver
             </a>
           </motion.div>
         </div>
       </section>
+
+      {/* Spacer for mobile bottom nav */}
+      <div className="h-20 md:hidden" />
     </>
   );
 }
