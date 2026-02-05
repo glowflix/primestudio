@@ -14,23 +14,6 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year
   },
   compress: true,
-  swcMinify: true,
-  webpack: (config, { isServer }) => {
-    config.module.rules.push({
-      test: /\.(png|jpg|jpeg|gif|webp|avif|svg|ico)$/i,
-      use: [
-        {
-          loader: 'file-loader',
-          options: {
-            publicPath: '/_next/static/images/',
-            outputPath: `${isServer ? '../' : ''}static/images/`,
-            name: '[name]-[hash].[ext]',
-          },
-        },
-      ],
-    });
-    return config;
-  },
 };
 
 module.exports = nextConfig;
