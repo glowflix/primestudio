@@ -14,7 +14,7 @@ export function createSupabaseClient() {
 
   if (!url || !anonKey) {
     throw new Error(
-      "Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+      "Supabase n'est pas configuré. Ajoutez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local (local) ou dans Vercel (Production/Preview selon le cas). Important: ces variables sont intégrées au build Next.js, donc après les avoir ajoutées dans Vercel il faut redeployer (nouveau build), sinon l'app continuera à voir 'undefined'."
     );
   }
 

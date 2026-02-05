@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, ShoppingBag, MessageSquare, User } from 'lucide-react';
+import { Home, ShoppingBag, User } from 'lucide-react';
 
 export default function BottomNavigation() {
   const pathname = usePathname();

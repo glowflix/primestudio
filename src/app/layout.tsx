@@ -68,7 +68,7 @@ export default function RootLayout({
                 <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-pink-500 to-red-500 bg-clip-text text-transparent">
                   PRIME STUDIO
                 </h3>
-                <p className="text-gray-400">Créateur d'images professionnelles à Kinshasa</p>
+                <p className="text-gray-400">Créateur d&apos;images professionnelles à Kinshasa</p>
               </div>
               <div>
                 <h4 className="font-bold mb-4">Liens Rapides</h4>
@@ -84,8 +84,16 @@ export default function RootLayout({
                 <p className="text-gray-400">Kinshasa, Gombé</p>
               </div>
             </div>
-            <div className="border-t border-white/10 pt-8 text-center text-gray-400 text-sm">
-              <p>© 2026 Prime Studio. Tous droits réservés.</p>
+            {/* Legal Links */}
+            <div className="border-t border-white/10 pt-8 mb-8">
+              <div className="flex flex-col sm:flex-row justify-center gap-6 text-gray-400 text-sm mb-8">
+                <a href="/privacy" className="hover:text-white transition">Politique de Confidentialité</a>
+                <span className="hidden sm:inline text-white/20">•</span>
+                <a href="/terms" className="hover:text-white transition">Conditions Générales</a>
+              </div>
+              <div className="text-center text-gray-400 text-sm">
+                <p>© {new Date().getFullYear()} Prime Studio. Tous droits réservés.</p>
+              </div>
             </div>
           </div>
         </footer>

@@ -252,7 +252,7 @@ export default function ContactPage() {
             transition={{ duration: 0.8 }}
           >
             <div>
-              <h2 className="text-3xl font-bold mb-6">Horaires d'Ouverture</h2>
+              <h2 className="text-3xl font-bold mb-6">Horaires d&apos;Ouverture</h2>
               <div className="space-y-4 text-gray-400">
                 <p className="flex justify-between"><span>Lundi - Vendredi</span> <span className="text-white">9:00 - 18:00</span></p>
                 <p className="flex justify-between"><span>Samedi</span> <span className="text-white">10:00 - 16:00</span></p>

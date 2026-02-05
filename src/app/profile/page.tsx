@@ -1,11 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
-import { Mail, Phone, User as UserIcon, LogOut, Send, MessageSquare, AlertCircle, Loader } from 'lucide-react';
+import { Mail, User as UserIcon, LogOut, Send, MessageSquare, AlertCircle, Loader } from 'lucide-react';
 import Link from 'next/link';
+
+type MessageRow = {
+  id: string | number;
+  content: string;
+  created_at: string;
+};
 
 export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
@@ -13,8 +19,23 @@ export default function Profile() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'profile' | 'messages'>('profile');
   const [messageText, setMessageText] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<MessageRow[]>([]);
   const [supabase, setSupabase] = useState<ReturnType<typeof createSupabaseClient> | null>(null);
+
+  const loadMessages = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
+    try {
+      const { data, error: err } = await client
+        .from('messages')
+        .select('id, content, created_at')
+        .eq('sender_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (err) throw err;
+      setMessages((data as unknown as MessageRow[]) ?? []);
+    } catch (err) {
+      console.error('Error loading messages:', err);
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -34,7 +55,7 @@ export default function Profile() {
       if (!mounted) return;
       setUser(data.session?.user ?? null);
       if (data.session?.user) {
-        loadMessages();
+        loadMessages(client!, data.session.user.id);
       }
       setIsLoading(false);
     });
@@ -43,7 +64,7 @@ export default function Profile() {
       if (!mounted) return;
       setUser(session?.user ?? null);
       if (session?.user) {
-        loadMessages();
+        loadMessages(client!, session.user.id);
       } else {
         setMessages([]);
       }
@@ -53,26 +74,7 @@ export default function Profile() {
       mounted = false;
       sub.subscription.unsubscribe();
     };
-  }, []);
-
-  const loadMessages = async () => {
-    try {
-      if (!supabase) return;
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-
-      const { data, error: err } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('sender_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (err) throw err;
-      setMessages(data ?? []);
-    } catch (err) {
-      console.error('Error loading messages:', err);
-    }
-  };
+  }, [loadMessages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +102,9 @@ export default function Profile() {
       if (err) throw err;
 
       setMessageText('');
-      await loadMessages();
+      if (supabase && user) {
+        await loadMessages(supabase, user.id);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de l\'envoi';
       setError(errorMessage);
@@ -156,7 +160,7 @@ export default function Profile() {
                 whileTap={{ scale: 0.95 }}
                 className="w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-lg transition-all duration-300"
               >
-                Se connecter / S'inscrire
+                Se connecter / S&apos;inscrire
               </motion.button>
             </Link>
           </motion.div>
@@ -205,7 +209,9 @@ export default function Profile() {
             <button
               onClick={() => {
                 setActiveTab('messages');
-                loadMessages();
+                if (supabase && user) {
+                  loadMessages(supabase, user.id);
+                }
               }}
               className={`px-4 py-3 font-medium transition ${
                 activeTab === 'messages'

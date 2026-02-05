@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel-build": "node -v && npm -v && next build",
+    "vercel-build": "node -v && npm -v && node -e \"console.log('NEXT_PUBLIC_SUPABASE_URL set:', !!process.env.NEXT_PUBLIC_SUPABASE_URL); console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY set:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);\" && next build",
     "start": "next start",
     "lint": "next lint"
   },

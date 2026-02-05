@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Share2, MessageCircle } from 'lucide-react';
+import NextImage from 'next/image';
 
 interface ImageModalProps {
   isOpen: boolean;
@@ -21,10 +22,96 @@ export default function ImageModal({
   onClose,
   onIndexChange,
 }: ImageModalProps) {
+  const safeImages = useMemo(
+    () => images.filter((src) => typeof src === 'string' && src.trim().length > 0),
+    [images]
+  );
+
+  const clampedIndex = useMemo(() => {
+    if (safeImages.length === 0) return 0;
+    if (Number.isNaN(currentIndex)) return 0;
+    return Math.min(Math.max(currentIndex, 0), safeImages.length - 1);
+  }, [currentIndex, safeImages.length]);
+
   const [zoom, setZoom] = useState(1);
   const [showShare, setShowShare] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const lastNavTimeRef = useRef(0);
+  const transitionTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current) {
+        window.clearTimeout(transitionTimeoutRef.current);
+        transitionTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowShare(false);
+      setZoom(1);
+      setIsTransitioning(false);
+      setIsImageLoaded(false);
+    }
+  }, [isOpen]);
+
+  const handleNext = useCallback(() => {
+    const now = Date.now();
+    if (now - lastNavTimeRef.current < 400) return;
+    lastNavTimeRef.current = now;
+
+    if (safeImages.length === 0) return;
+    if (safeImages.length === 1) return;
+    
+    setIsTransitioning(true);
+    setIsImageLoaded(false);
+    onIndexChange((clampedIndex + 1) % safeImages.length);
+    setZoom(1);
+    if (transitionTimeoutRef.current) window.clearTimeout(transitionTimeoutRef.current);
+    transitionTimeoutRef.current = window.setTimeout(() => setIsTransitioning(false), 400);
+  }, [clampedIndex, safeImages.length, onIndexChange]);
+
+  const handlePrevious = useCallback(() => {
+    const now = Date.now();
+    if (now - lastNavTimeRef.current < 400) return;
+    lastNavTimeRef.current = now;
+
+    if (safeImages.length === 0) return;
+    if (safeImages.length === 1) return;
+    
+    setIsTransitioning(true);
+    setIsImageLoaded(false);
+    onIndexChange((clampedIndex - 1 + safeImages.length) % safeImages.length);
+    setZoom(1);
+    if (transitionTimeoutRef.current) window.clearTimeout(transitionTimeoutRef.current);
+    transitionTimeoutRef.current = window.setTimeout(() => setIsTransitioning(false), 400);
+  }, [clampedIndex, safeImages.length, onIndexChange]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setIsImageLoaded(false);
+  }, [isOpen, clampedIndex]);
+
+  useEffect(() => {
+    // Preload current + adjacent images to make navigation feel instant.
+    if (!isOpen) return;
+    if (safeImages.length === 0) return;
+
+    const currentSrc = safeImages[clampedIndex];
+    const nextSrc = safeImages[(clampedIndex + 1) % safeImages.length];
+    const prevSrc = safeImages[(clampedIndex - 1 + safeImages.length) % safeImages.length];
+
+    [currentSrc, nextSrc, prevSrc]
+      .filter(Boolean)
+      .forEach((src) => {
+        const img = new window.Image();
+        img.decoding = 'async';
+        img.src = src;
+      });
+  }, [isOpen, clampedIndex, safeImages]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -36,33 +123,11 @@ export default function ImageModal({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentIndex, images.length, isTransitioning, onClose]);
-
-  const handleNext = useCallback(() => {
-    const now = Date.now();
-    if (now - lastNavTimeRef.current < 400) return;
-    lastNavTimeRef.current = now;
-    
-    setIsTransitioning(true);
-    onIndexChange((currentIndex + 1) % images.length);
-    setZoom(1);
-    setTimeout(() => setIsTransitioning(false), 400);
-  }, [currentIndex, images.length, onIndexChange]);
-
-  const handlePrevious = useCallback(() => {
-    const now = Date.now();
-    if (now - lastNavTimeRef.current < 400) return;
-    lastNavTimeRef.current = now;
-    
-    setIsTransitioning(true);
-    onIndexChange((currentIndex - 1 + images.length) % images.length);
-    setZoom(1);
-    setTimeout(() => setIsTransitioning(false), 400);
-  }, [currentIndex, images.length, onIndexChange]);
+  }, [isOpen, isTransitioning, onClose, handlePrevious, handleNext]);
 
   const handleShare = (platform: 'whatsapp' | 'facebook') => {
     const url = typeof window !== 'undefined' ? window.location.href : 'https://primestudios.vercel.app';
-    const imageUrl = `${url}${images[currentIndex]}`;
+    // Note: we share the page URL for now (not a direct image URL).
     
     if (platform === 'whatsapp') {
       const text = encodeURIComponent(shareMessage + `\n\n${url}`);
@@ -72,6 +137,32 @@ export default function ImageModal({
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank');
     }
   };
+
+  if (safeImages.length === 0) {
+    return (
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed inset-4 md:inset-8 z-50 flex items-center justify-center"
+            >
+              <div className="text-gray-300">Aucune image disponible</div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -101,7 +192,7 @@ export default function ImageModal({
               className="flex justify-between items-center mb-4 text-white"
             >
               <div className="text-sm font-medium">
-                {currentIndex + 1} / {images.length}
+                {clampedIndex + 1} / {safeImages.length}
               </div>
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -121,16 +212,30 @@ export default function ImageModal({
                 transition={{ delay: 0.2 }}
                 className="relative w-full h-full flex items-center justify-center"
               >
-                <motion.img
-                  key={currentIndex}
-                  src={images[currentIndex]}
-                  alt={`Photo ${currentIndex + 1}`}
+                {!isImageLoaded && (
+                  <div className="absolute inset-0 bg-gray-900/60 animate-pulse" />
+                )}
+
+                <motion.div
+                  key={clampedIndex}
                   initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: zoom }}
+                  animate={{ opacity: isImageLoaded ? 1 : 0, scale: zoom }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="max-w-full max-h-full object-contain"
+                  className={`relative w-full h-full transition-[filter] duration-300 ${isImageLoaded ? 'blur-0' : 'blur-sm'}`}
                   style={{ transformOrigin: 'center center' }}
-                />
+                >
+                  <NextImage
+                    src={safeImages[clampedIndex]}
+                    alt={`Photo ${clampedIndex + 1}`}
+                    fill
+                    sizes="100vw"
+                    priority={isOpen}
+                    style={{ objectFit: 'contain' }}
+                    draggable={false}
+                    onLoadingComplete={() => setIsImageLoaded(true)}
+                    onError={() => setIsImageLoaded(true)}
+                  />
+                </motion.div>
 
                 {/* Message Overlay */}
                 <motion.div

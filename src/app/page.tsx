@@ -65,7 +65,7 @@ export default function Home() {
               >
                 <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-pink-500/30 text-pink-400 text-sm font-medium">
                   <Camera size={16} />
-                  Créateur d'Images Professionnelles
+                  Créateur d&apos;Images Professionnelles
                 </span>
               </motion.div>
 
@@ -182,7 +182,7 @@ export default function Home() {
           >
             <h2 className="text-4xl font-bold">Prêt à Commencer?</h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Contactez-nous dès aujourd'hui pour réserver votre séance et transformer votre vision en réalité.
+              Contactez-nous dès aujourd&apos;hui pour réserver votre séance et transformer votre vision en réalité.
             </p>
 
             <Link href="/contact">

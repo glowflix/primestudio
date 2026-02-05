@@ -26,6 +26,9 @@ cd primestudio
 # Installer les dépendances
 npm install
 
+# Configurer les variables d'environnement
+# (copiez .env.example vers .env.local et renseignez Supabase)
+
 # Démarrer le serveur de développement
 npm run dev
 ```

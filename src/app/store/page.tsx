@@ -2,9 +2,10 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
 import ImageModal from '@/components/ImageModal';
+import Image from 'next/image';
 
 const galleryImages = [
   {
@@ -196,13 +197,15 @@ export default function Store() {
                       className="cursor-pointer group relative overflow-hidden rounded-xl aspect-square border border-white/10 hover:border-pink-500/50 transition-colors duration-300"
                       whileHover={{ borderColor: 'rgba(236, 72, 153, 0.5)' }}
                     >
-                      <img
-                        src={image.src}
-                        alt={image.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={image.src}
+                          alt={image.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
 
                       {/* Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
@@ -238,7 +241,7 @@ export default function Store() {
         images={imagesList}
         currentIndex={selectedImageIndex ?? 0}
         onClose={() => setSelectedImageIndex(null)}
-        onIndexChange={setSelectedImageIndex}
+        onIndexChange={(index) => setSelectedImageIndex(index)}
       />
 
       {/* CTA Section */}
@@ -253,7 +256,7 @@ export default function Store() {
           >
             <h2 className="text-4xl font-bold">Vous aimez nos travaux?</h2>
             <p className="text-gray-400 text-lg">
-              Contactez-nous pour réserver votre séance photo aujourd'hui
+              Contactez-nous pour réserver votre séance photo aujourd&apos;hui
             </p>
             <a
               href="/contact"
