@@ -73,6 +73,10 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
         const img = new window.Image();
         img.decoding = 'async';
         img.src = src;
+        // Add error handler for failed image loads
+        img.onerror = () => {
+          console.warn(`Failed to preload image: ${src}`);
+        };
       });
   }, [current, safeImages]);
 

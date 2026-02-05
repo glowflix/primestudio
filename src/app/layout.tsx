@@ -46,12 +46,11 @@ export default function RootLayout({
     <html lang="fr">
       <head>
         <meta charSet="utf-8" />
-        {/* Preload critical images */}
-        <link rel="preload" as="image" href="/images/267A1009.webp" />
-        <link rel="preload" as="image" href="/images/267A1031.webp" />
-        {/* DNS Prefetch for external resources */}
+        {/* DNS Prefetch for faster resolution */}
         <link rel="dns-prefetch" href="https://wa.me" />
         <link rel="dns-prefetch" href="https://www.facebook.com" />
+        {/* Optimize for Core Web Vitals */}
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
       </head>
       <body className="bg-black text-white">
         <Navigation />
