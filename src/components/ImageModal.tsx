@@ -374,8 +374,8 @@ export default function ImageModal({
                         transition={{ type: 'spring', damping: 15, stiffness: 200 }}
                         className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 z-50"
                       >
-                        <div className="bg-black/95 backdrop-blur border border-white/20 rounded-2xl p-4 shadow-2xl">
-                          <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-black/95 backdrop-blur border border-white/20 rounded-2xl p-6 shadow-2xl">
+                          <div className="grid grid-cols-2 gap-4">
                             {/* WhatsApp */}
                             <motion.button
                               whileHover={{ scale: 1.1, y: -2 }}
@@ -386,10 +386,10 @@ export default function ImageModal({
                                 window.open(`https://wa.me/?text=${text}`, '_blank');
                                 setShowShare(false);
                               }}
-                              className="flex flex-col items-center gap-2 px-4 py-3 bg-green-600/20 hover:bg-green-600/30 text-green-300 rounded-xl transition border border-green-600/50 font-semibold"
+                              className="flex flex-col items-center gap-3 px-6 py-4 bg-green-600/20 hover:bg-green-600/30 text-green-300 rounded-xl transition border border-green-600/50 font-semibold"
                             >
-                              <div className="w-6 h-6">{ShareIcons.WhatsApp}</div>
-                              <span className="text-xs">WhatsApp</span>
+                              <div className="w-10 h-10">{ShareIcons.WhatsApp}</div>
+                              <span className="text-sm font-medium">WhatsApp</span>
                             </motion.button>
 
                             {/* Facebook */}
@@ -402,10 +402,10 @@ export default function ImageModal({
                                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank');
                                 setShowShare(false);
                               }}
-                              className="flex flex-col items-center gap-2 px-4 py-3 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded-xl transition border border-blue-600/50 font-semibold"
+                              className="flex flex-col items-center gap-3 px-6 py-4 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded-xl transition border border-blue-600/50 font-semibold"
                             >
-                              <div className="w-6 h-6">{ShareIcons.Facebook}</div>
-                              <span className="text-xs">Facebook</span>
+                              <div className="w-10 h-10">{ShareIcons.Facebook}</div>
+                              <span className="text-sm font-medium">Facebook</span>
                             </motion.button>
 
                             {/* Instagram */}
@@ -416,10 +416,10 @@ export default function ImageModal({
                                 alert('Téléchargez l\'image et partagez-la sur Instagram Stories');
                                 setShowShare(false);
                               }}
-                              className="flex flex-col items-center gap-2 px-4 py-3 bg-gradient-to-br from-pink-600/20 to-purple-600/20 hover:from-pink-600/30 hover:to-purple-600/30 text-pink-300 rounded-xl transition border border-pink-600/50 font-semibold"
+                              className="flex flex-col items-center gap-3 px-6 py-4 bg-gradient-to-br from-pink-600/20 to-purple-600/20 hover:from-pink-600/30 hover:to-purple-600/30 text-pink-300 rounded-xl transition border border-pink-600/50 font-semibold"
                             >
-                              <div className="w-6 h-6">{ShareIcons.Instagram}</div>
-                              <span className="text-xs">Instagram</span>
+                              <div className="w-10 h-10">{ShareIcons.Instagram}</div>
+                              <span className="text-sm font-medium">Instagram</span>
                             </motion.button>
 
                             {/* Copy Link */}
@@ -431,10 +431,10 @@ export default function ImageModal({
                                 navigator.clipboard.writeText(url);
                                 setShowShare(false);
                               }}
-                              className="flex flex-col items-center gap-2 px-4 py-3 bg-gray-600/20 hover:bg-gray-600/30 text-gray-300 rounded-xl transition border border-gray-600/50 font-semibold"
+                              className="flex flex-col items-center gap-3 px-6 py-4 bg-gray-600/20 hover:bg-gray-600/30 text-gray-300 rounded-xl transition border border-gray-600/50 font-semibold"
                             >
-                              <div className="w-6 h-6">{ShareIcons.Copy}</div>
-                              <span className="text-xs">Copy Link</span>
+                              <div className="w-10 h-10">{ShareIcons.Copy}</div>
+                              <span className="text-sm font-medium">Copy Link</span>
                             </motion.button>
                           </div>
                         </div>

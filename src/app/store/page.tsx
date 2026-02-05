@@ -129,12 +129,12 @@ export default function Store() {
         </div>
       </section>
 
-      {/* Search and Filter Section */}
-      <section className="py-8 sticky top-20 z-40 bg-black/80 backdrop-blur border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Search and Filter Section - STICKY LIKE INSTAGRAM */}
+      <section className="sticky top-20 z-50 bg-gradient-to-b from-black via-black/95 to-black/80 backdrop-blur border-b border-white/10 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Search Bar */}
           <motion.div
-            className="mb-8 relative"
+            className="mb-6 relative"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -145,13 +145,13 @@ export default function Store() {
               placeholder="Rechercher une photo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-pink-500 focus:outline-none transition-colors text-white placeholder-gray-500"
+              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-pink-500 focus:outline-none transition-all text-white placeholder-gray-500 font-medium"
             />
           </motion.div>
 
-          {/* Category Filters */}
+          {/* Category Filters - Instagram style horizontal scroll */}
           <motion.div
-            className="flex flex-wrap gap-2"
+            className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -160,9 +160,9 @@ export default function Store() {
               <motion.button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-2 rounded-full font-medium transition-all duration-300 ${
+                className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                   selectedCategory === cat.id
-                    ? 'bg-gradient-to-r from-pink-500 to-red-500 text-white'
+                    ? 'bg-gradient-to-r from-pink-500 to-red-500 text-white shadow-lg shadow-pink-500/30'
                     : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
                 whileHover={{ scale: 1.05 }}
@@ -175,13 +175,13 @@ export default function Store() {
         </div>
       </section>
 
-      {/* Gallery Grid */}
-      <section className="py-12">
+      {/* Gallery Grid - 2 COLUMNS ON MOBILE LIKE INSTAGRAM */}
+      <section className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
             {filteredImages.length > 0 ? (
               <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4 lg:gap-6"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -194,7 +194,7 @@ export default function Store() {
                       key={image.id}
                       variants={itemVariants}
                       onClick={() => handleImageClick(globalIndex)}
-                      className="cursor-pointer group relative overflow-hidden rounded-xl aspect-square border border-white/10 hover:border-pink-500/50 transition-colors duration-300"
+                      className="cursor-pointer group relative overflow-hidden rounded-lg md:rounded-xl aspect-square border border-white/10 hover:border-pink-500/50 transition-colors duration-300"
                       whileHover={{ borderColor: 'rgba(236, 72, 153, 0.5)' }}
                     >
                       <div className="relative w-full h-full">
