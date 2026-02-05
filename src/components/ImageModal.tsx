@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, MessageCircle } from 'lucide-react';
 import NextImage from 'next/image';
 
-// Professional SVG Share Icons
+// Professional SVG Share Icons - OFFICIAL LOGOS
 const ShareIcons = {
   Share: (
     <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -18,28 +18,37 @@ const ShareIcons = {
   ),
   WhatsApp: (
     <svg className="w-full h-full" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004c-1.052 0-2.069.356-2.897 1.025l-.064.043-2.732-.717.74 2.53-.052.079c-.704.827-1.077 1.902-1.077 3.033 0 2.965 2.883 5.377 6.322 5.377 1.68 0 3.259-.604 4.431-1.707 1.223-1.15 1.9-2.747 1.9-4.424 0-3.332-2.714-6.04-6.04-6.04zm8.817-2.206c-2.828-2.752-7.343-2.811-10.254-.156-3.233 2.909-3.393 7.998-.474 11.288 2.922 3.291 7.939 3.452 11.172.544.827-.788 1.456-1.774 1.873-2.87.419-1.136.639-2.357.639-3.644 0-2.754-1.236-5.392-3.956-7.162z" />
+      {/* Official WhatsApp logo - Green circle with white phone */}
+      <circle cx="12" cy="12" r="12" fill="#25D366" />
+      <path d="M17.6 9.5c-.3-1.5-1.4-2.8-2.9-3.3-.8-.2-1.7-.2-2.5 0-1.9.5-3.4 2-3.9 4-.2 1 0 2.1.5 3.1-.2 1.5-.8 2.9-1.6 4.1-.3.5-.1 1.2.4 1.4.5.2 1.1 0 1.3-.5.6-1 1.1-2.1 1.3-3.2.8.2 1.6.3 2.5.3 1.9 0 3.7-.7 5.1-2 1.4-1.3 2.3-3.1 2.5-5 .1-.6 0-1.3-.2-1.9z" fill="white" />
     </svg>
   ),
   Facebook: (
     <svg className="w-full h-full" viewBox="0 0 24 24" fill="currentColor">
+      {/* Official Facebook logo */}
       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
     </svg>
   ),
   Instagram: (
-    <svg className="w-full h-full" viewBox="0 0 24 24" fill="currentColor">
-      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#grad)" />
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="url(#instaGradient)">
+      {/* Official Instagram logo with gradient */}
       <defs>
-        <linearGradient id="grad" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#feda75" />
-          <stop offset="5%" stopColor="#fa7e1e" />
-          <stop offset="45%" stopColor="#d92e7f" />
-          <stop offset="60%" stopColor="#9b36b7" />
-          <stop offset="90%" stopColor="#515bd4" />
-        </linearGradient>
+        <radialGradient id="instaGradient" cx="30%" cy="107%">
+          <stop offset="0%" stopColor="#FDF497" />
+          <stop offset="5%" stopColor="#FDF497" />
+          <stop offset="45%" stopColor="#F77737" />
+          <stop offset="60%" stopColor="#F74135" />
+          <stop offset="90%" stopColor="#C320E5" />
+        </radialGradient>
       </defs>
-      <circle cx="12" cy="12" r="3.5" fill="white" opacity="0.8" />
-      <circle cx="17.5" cy="6.5" r="1.5" fill="white" opacity="0.8" />
+      {/* Rounded square background */}
+      <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#instaGradient)" />
+      {/* Camera - outer circle */}
+      <circle cx="12" cy="12" r="4.3" fill="none" stroke="white" strokeWidth="1.2" />
+      {/* Camera - inner circle/flash */}
+      <circle cx="12" cy="12" r="2.8" fill="none" stroke="white" strokeWidth="0.6" />
+      {/* Flash circle top-left */}
+      <circle cx="7.5" cy="6.5" r="0.7" fill="white" />
     </svg>
   ),
   Copy: (
@@ -372,13 +381,13 @@ export default function ImageModal({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.8, y: 10 }}
                         transition={{ type: 'spring', damping: 15, stiffness: 200 }}
-                        className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 z-50"
+                        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50"
                       >
-                        <div className="bg-black/95 backdrop-blur border border-white/20 rounded-2xl p-6 shadow-2xl">
-                          <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-black/98 backdrop-blur border border-white/20 rounded-3xl p-8 shadow-2xl min-w-80">
+                          <div className="grid grid-cols-2 gap-6">
                             {/* WhatsApp */}
                             <motion.button
-                              whileHover={{ scale: 1.1, y: -2 }}
+                              whileHover={{ scale: 1.1, y: -3 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => {
                                 const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -386,15 +395,15 @@ export default function ImageModal({
                                 window.open(`https://wa.me/?text=${text}`, '_blank');
                                 setShowShare(false);
                               }}
-                              className="flex flex-col items-center gap-3 px-6 py-4 bg-green-600/20 hover:bg-green-600/30 text-green-300 rounded-xl transition border border-green-600/50 font-semibold"
+                              className="flex flex-col items-center gap-4 px-8 py-6 bg-green-600/20 hover:bg-green-600/40 text-green-300 rounded-2xl transition-all duration-300 border border-green-600/50 font-semibold"
                             >
-                              <div className="w-10 h-10">{ShareIcons.WhatsApp}</div>
-                              <span className="text-sm font-medium">WhatsApp</span>
+                              <div className="w-14 h-14">{ShareIcons.WhatsApp}</div>
+                              <span className="text-sm font-semibold leading-tight">WhatsApp</span>
                             </motion.button>
 
                             {/* Facebook */}
                             <motion.button
-                              whileHover={{ scale: 1.1, y: -2 }}
+                              whileHover={{ scale: 1.1, y: -3 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => {
                                 const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -402,39 +411,39 @@ export default function ImageModal({
                                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank');
                                 setShowShare(false);
                               }}
-                              className="flex flex-col items-center gap-3 px-6 py-4 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded-xl transition border border-blue-600/50 font-semibold"
+                              className="flex flex-col items-center gap-4 px-8 py-6 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-2xl transition-all duration-300 border border-blue-600/50 font-semibold"
                             >
-                              <div className="w-10 h-10">{ShareIcons.Facebook}</div>
-                              <span className="text-sm font-medium">Facebook</span>
+                              <div className="w-14 h-14">{ShareIcons.Facebook}</div>
+                              <span className="text-sm font-semibold leading-tight">Facebook</span>
                             </motion.button>
 
                             {/* Instagram */}
                             <motion.button
-                              whileHover={{ scale: 1.1, y: -2 }}
+                              whileHover={{ scale: 1.1, y: -3 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => {
                                 alert('Téléchargez l\'image et partagez-la sur Instagram Stories');
                                 setShowShare(false);
                               }}
-                              className="flex flex-col items-center gap-3 px-6 py-4 bg-gradient-to-br from-pink-600/20 to-purple-600/20 hover:from-pink-600/30 hover:to-purple-600/30 text-pink-300 rounded-xl transition border border-pink-600/50 font-semibold"
+                              className="flex flex-col items-center gap-4 px-8 py-6 bg-gradient-to-br from-pink-600/20 to-purple-600/20 hover:from-pink-600/40 hover:to-purple-600/40 text-pink-300 rounded-2xl transition-all duration-300 border border-pink-600/50 font-semibold"
                             >
-                              <div className="w-10 h-10">{ShareIcons.Instagram}</div>
-                              <span className="text-sm font-medium">Instagram</span>
+                              <div className="w-14 h-14">{ShareIcons.Instagram}</div>
+                              <span className="text-sm font-semibold leading-tight">Instagram</span>
                             </motion.button>
 
                             {/* Copy Link */}
                             <motion.button
-                              whileHover={{ scale: 1.1, y: -2 }}
+                              whileHover={{ scale: 1.1, y: -3 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => {
                                 const url = typeof window !== 'undefined' ? window.location.href : '';
                                 navigator.clipboard.writeText(url);
                                 setShowShare(false);
                               }}
-                              className="flex flex-col items-center gap-3 px-6 py-4 bg-gray-600/20 hover:bg-gray-600/30 text-gray-300 rounded-xl transition border border-gray-600/50 font-semibold"
+                              className="flex flex-col items-center gap-4 px-8 py-6 bg-gray-600/20 hover:bg-gray-600/40 text-gray-300 rounded-2xl transition-all duration-300 border border-gray-600/50 font-semibold"
                             >
-                              <div className="w-10 h-10">{ShareIcons.Copy}</div>
-                              <span className="text-sm font-medium">Copy Link</span>
+                              <div className="w-14 h-14">{ShareIcons.Copy}</div>
+                              <span className="text-sm font-semibold leading-tight">Copy Link</span>
                             </motion.button>
                           </div>
                         </div>
