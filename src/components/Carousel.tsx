@@ -6,6 +6,7 @@ import type { Variants } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import NextImage from 'next/image';
 import { getBlurDataURL, preloadBlurURLs } from '@/lib/imageBlur';
+import { ImageDiagnosticsTracker } from '@/lib/imageDiagnostics';
 
 interface CarouselProps {
   images: string[];
@@ -14,37 +15,72 @@ interface CarouselProps {
 }
 
 export default function Carousel({ images, autoplay = true, interval = 5000 }: CarouselProps) {
-  const safeImages = useMemo(() => images.filter((src) => typeof src === 'string' && src.trim().length > 0), [images]);
+  // Strict validation of images array
+  const safeImages = useMemo(() => {
+    const validated = images.filter((src) => {
+      const isValid = typeof src === 'string' && src.trim().length > 0;
+      if (!isValid) {
+        console.error('[CAROUSEL] Invalid image:', src);
+      }
+      return isValid;
+    });
+
+    // Log any missing images
+    if (validated.length !== images.length) {
+      console.warn('[CAROUSEL] Filtered out', images.length - validated.length, 'invalid images');
+    }
+
+    return validated;
+  }, [images]);
+
   const shouldReduceMotion = useReducedMotion();
 
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCurrentLoaded, setIsCurrentLoaded] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const autoplayTimerRef = useRef<number | null>(null);
   const blurUrlsRef = useRef<Record<string, string>>({});
 
+  // Validate index is within bounds
+  const getValidIndex = useCallback(
+    (idx: number) => {
+      if (safeImages.length === 0) return 0;
+      return Math.max(0, Math.min(idx, safeImages.length - 1));
+    },
+    [safeImages.length]
+  );
+
   // Preload blur URLs on mount for smooth progressive loading
   useEffect(() => {
+    if (safeImages.length === 0) return;
+
     preloadBlurURLs(safeImages);
     safeImages.forEach((src) => {
       blurUrlsRef.current[src] = getBlurDataURL(src);
     });
+
+    console.log('[CAROUSEL] Initialized with', safeImages.length, 'images');
   }, [safeImages]);
 
   useEffect(() => {
-    // Keep index valid if images list changes.
+    // Keep index valid if images list changes
     if (safeImages.length === 0) {
       setCurrent(0);
       setIsCurrentLoaded(false);
       return;
     }
-    if (current >= safeImages.length) {
-      setCurrent(0);
+
+    // Clamp index to valid range
+    const validIndex = getValidIndex(current);
+    if (validIndex !== current) {
+      console.warn('[CAROUSEL] Clamping index from', current, 'to', validIndex);
+      setCurrent(validIndex);
       setIsCurrentLoaded(false);
     }
-  }, [safeImages.length, current]);
+  }, [safeImages.length, current, getValidIndex]);
 
   useEffect(() => {
     if (!autoplay || safeImages.length <= 1 || isAnimating) return;
@@ -69,35 +105,45 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
     };
   }, [autoplay, interval, safeImages.length, isAnimating]);
 
+  // Get currently displayed image safely
+  const currentImageSrc = safeImages.length > 0 ? safeImages[getValidIndex(current)] : null;
+  const nextImageSrc =
+    safeImages.length > 0 ? safeImages[(getValidIndex(current) + 1) % safeImages.length] : null;
+
   useEffect(() => {
     // MOBILE FIX: Preload ONLY current + next (not prev) to avoid memory saturation
     // iPhone crashes when preloading 3+ images simultaneously
-    if (safeImages.length === 0) return;
+    if (!currentImageSrc || !nextImageSrc) return;
 
-    const currentSrc = safeImages[current];
-    const nextSrc = safeImages[(current + 1) % safeImages.length];
-
-    // Safely preload exactly 2 images max
     try {
       // Current slide
       const img1 = new window.Image();
       img1.decoding = 'async';
-      img1.src = currentSrc;
+      img1.src = currentImageSrc;
       img1.onerror = () => {
-        console.warn(`Failed to preload current image: ${currentSrc}`);
+        const msg = `Failed to preload current image: ${currentImageSrc}`;
+        console.warn('[CAROUSEL_PRELOAD_ERROR]', msg);
+        ImageDiagnosticsTracker.trackImageLoad(currentImageSrc, false, 'Preload failed');
+      };
+      img1.onload = () => {
+        ImageDiagnosticsTracker.trackImageLoad(currentImageSrc, true);
       };
 
       // Next slide only
       const img2 = new window.Image();
       img2.decoding = 'async';
-      img2.src = nextSrc;
+      img2.src = nextImageSrc;
       img2.onerror = () => {
-        console.warn(`Failed to preload next image: ${nextSrc}`);
+        console.warn('[CAROUSEL_PRELOAD_ERROR]', `Failed to preload next image: ${nextImageSrc}`);
+        ImageDiagnosticsTracker.trackImageLoad(nextImageSrc, false, 'Preload failed');
+      };
+      img2.onload = () => {
+        ImageDiagnosticsTracker.trackImageLoad(nextImageSrc, true);
       };
     } catch (err) {
-      console.warn('Error preloading carousel images:', err);
+      console.error('[CAROUSEL_PRELOAD_EXCEPTION]', err);
     }
-  }, [current, safeImages]);
+  }, [currentImageSrc, nextImageSrc]);
 
   const slideVariants: Variants = {
     enter: (dir: number) => ({
@@ -139,7 +185,7 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
     <div className="relative w-full h-96 md:h-[500px] overflow-hidden rounded-2xl shadow-2xl bg-black">
       <AnimatePresence initial={false} custom={direction} mode="wait">
         <motion.div
-          key={safeImages[current] ?? current}
+          key={currentImageSrc ?? current}
           custom={direction}
           variants={slideVariants}
           initial="enter"
@@ -156,26 +202,44 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
             <div className="absolute inset-0 bg-gray-900 animate-pulse" />
           )}
 
-          <div className="relative w-full h-full">
-            <NextImage
-              src={safeImages[current]}
-              alt={`Slide ${current + 1}`}
-              fill
-              sizes="(max-width: 768px) 100vw, 1200px"
-              priority={current === 0}
-              quality={80}
-              blurDataURL={blurUrlsRef.current[safeImages[current]]}
-              placeholder="blur"
-              className={`object-cover transition-all duration-500 ease-out ${isCurrentLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'}`}
-              style={{ willChange: 'opacity' }}
-              onLoadingComplete={() => setIsCurrentLoaded(true)}
-              onError={() => {
-                // Prevent being stuck on a blank frame if an image fails to load.
-                setIsCurrentLoaded(true);
-                setIsAnimating(false);
-              }}
-            />
-          </div>
+          {imageError && (
+            <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-20">
+              <div className="text-center">
+                <p className="text-red-400 text-sm mb-2">❌ Erreur de chargement</p>
+                <p className="text-gray-400 text-xs break-all max-w-xs">{imageError}</p>
+              </div>
+            </div>
+          )}
+
+          {currentImageSrc && (
+            <div className="relative w-full h-full">
+              <NextImage
+                src={currentImageSrc}
+                alt={`Slide ${current + 1}`}
+                fill
+                sizes="(max-width: 768px) 100vw, 1200px"
+                priority={current === 0}
+                quality={80}
+                blurDataURL={blurUrlsRef.current[currentImageSrc] || undefined}
+                placeholder="blur"
+                className={`object-cover transition-all duration-500 ease-out ${isCurrentLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'}`}
+                style={{ willChange: 'opacity' }}
+                onLoadingComplete={() => {
+                  setIsCurrentLoaded(true);
+                  setImageError(null);
+                  ImageDiagnosticsTracker.trackImageLoad(currentImageSrc, true);
+                }}
+                onError={(e) => {
+                  const errorMsg = `Failed to load: ${currentImageSrc}`;
+                  console.error('[CAROUSEL_IMAGE_ERROR]', errorMsg, e);
+                  setImageError(errorMsg);
+                  setIsCurrentLoaded(true);
+                  setIsAnimating(false);
+                  ImageDiagnosticsTracker.trackImageLoad(currentImageSrc, false, errorMsg);
+                }}
+              />
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
 
