@@ -1,13 +1,28 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createSupabaseClient } from '@/lib/supabase/client';
-import type { User, Session } from '@supabase/supabase-js';
-import { Mail, User as UserIcon, LogOut, Lock, Camera, Share2, Heart, AlertCircle, Loader, Check, Edit2, Eye, EyeOff } from 'lucide-react';
+import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import NextImage from 'next/image';
+
+// Professional SVG Icons
+const SvgIcon = {
+  User: <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" /></svg>,
+  LogOut: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>,
+  Edit: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" /></svg>,
+  Check: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>,
+  X: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
+  Mail: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>,
+  Phone: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" /></svg>,
+  Gallery: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>,
+  Settings: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6m-15.78 7.78l4.24-4.24m2.12-2.12l4.24-4.24" /></svg>,
+  Lock: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>,
+  AlertCircle: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>,
+  Loader: <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" opacity="0.3" /><path d="M12 2a10 10 0 0 1 10 10" /></svg>,
+};
 
 type UserProfile = {
   id: string;
@@ -31,6 +46,8 @@ type UserPhoto = {
   created_at: string;
 };
 
+type TabType = 'overview' | 'gallery' | 'settings';
+
 export default function Profile() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -38,11 +55,11 @@ export default function Profile() {
   const [photos, setPhotos] = useState<UserPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'gallery' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [supabase, setSupabase] = useState<ReturnType<typeof createSupabaseClient> | null>(null);
 
-  // Gallery pagination (FIX for iPhone memory crash)
-  const GALLERY_PAGE_SIZE = 12; // Max 12 images per page on mobile
+  // Pagination
+  const GALLERY_PAGE_SIZE = 12;
   const [galleryPage, setGalleryPage] = useState(1);
   const visiblePhotos = photos.slice(0, galleryPage * GALLERY_PAGE_SIZE);
 
@@ -51,14 +68,10 @@ export default function Profile() {
   const [editForm, setEditForm] = useState({ full_name: '', bio: '', phone: '' });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Password change
+  // Password
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
-  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
   const [passwordError, setPasswordError] = useState('');
-
-  // Share
-  const [copiedLink, setCopiedLink] = useState('');
 
   // Initialize
   useEffect(() => {
@@ -98,30 +111,14 @@ export default function Profile() {
       }
     };
 
-    const { data: sub } = client.auth.onAuthStateChange((_event: string, session: Session | null) => {
-      if (!mounted) return;
-      if (!session?.user) {
-        setUser(null);
-        router.push('/auth');
-      } else {
-        setUser(session.user);
-      }
-    });
-
     initAuth();
-
-    return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
-    };
+    return () => { mounted = false; };
   }, [router]);
 
   const loadProfile = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
     try {
       const { data, error: err } = await client.from('user_profiles').select('*').eq('id', userId).single();
-
       if (err && err.code !== 'PGRST116') throw err;
-
       if (data) {
         setProfile(data);
         setEditForm({
@@ -142,7 +139,6 @@ export default function Profile() {
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
-
       if (err) throw err;
       setPhotos(data || []);
     } catch (err) {
@@ -151,38 +147,27 @@ export default function Profile() {
   }, []);
 
   const handleLogout = async () => {
-    setIsLoading(true);
+    if (!supabase) return;
     try {
-      if (!supabase) throw new Error('Supabase is not ready');
       await supabase.auth.signOut();
-      setUser(null);
       router.push('/');
     } catch (err) {
-      console.error('Error logging out:', err);
+      setError(err instanceof Error ? err.message : 'Logout error');
     }
   };
 
   const handleSaveProfile = async () => {
-    if (!user || !supabase) return;
+    if (!supabase || !user) return;
     setIsSaving(true);
-    setError('');
-
     try {
       const { error: err } = await supabase
         .from('user_profiles')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          full_name: editForm.full_name,
-          bio: editForm.bio,
-          phone: editForm.phone,
-          provider: user.app_metadata?.provider || 'email',
-          created_at: user.created_at,
-        });
-
+        .upsert({ id: user.id, ...editForm }, { onConflict: 'id' });
       if (err) throw err;
-      await loadProfile(supabase, user.id);
+      setProfile({ ...profile!, ...editForm, id: user.id, email: user.email || '', created_at: user.created_at || '', provider: user.app_metadata?.provider || 'email' });
       setIsEditMode(false);
+      setError('✅ Profile updated successfully');
+      setTimeout(() => setError(''), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error saving profile');
     } finally {
@@ -190,30 +175,28 @@ export default function Profile() {
     }
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePasswordChange = async () => {
     setPasswordError('');
-
+    if (!passwordForm.new || !passwordForm.confirm) {
+      setPasswordError('Please fill all fields');
+      return;
+    }
     if (passwordForm.new !== passwordForm.confirm) {
-      setPasswordError('Les mots de passe ne correspondent pas');
+      setPasswordError('Passwords do not match');
       return;
     }
-
     if (passwordForm.new.length < 6) {
-      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
+      setPasswordError('Password must be at least 6 characters');
       return;
     }
-
     if (!supabase) return;
     setIsSaving(true);
-
     try {
       const { error: err } = await supabase.auth.updateUser({ password: passwordForm.new });
       if (err) throw err;
-
       setPasswordForm({ current: '', new: '', confirm: '' });
       setShowPasswordForm(false);
-      setError('✅ Mot de passe changé avec succès');
+      setError('✅ Password updated successfully');
       setTimeout(() => setError(''), 3000);
     } catch (err) {
       setPasswordError(err instanceof Error ? err.message : 'Error updating password');
@@ -222,39 +205,31 @@ export default function Profile() {
     }
   };
 
-  const sharePhotoLink = (photo: UserPhoto) => {
-    const url = `${window.location.origin}/store?photo=${photo.id}`;
-    navigator.clipboard.writeText(url);
-    setCopiedLink(photo.id);
-    setTimeout(() => setCopiedLink(''), 2000);
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-pink-950/20 to-black flex items-center justify-center">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
-          <Loader size={40} className="text-pink-500" />
-        </motion.div>
+      <div className="min-h-screen bg-gradient-to-br from-black via-pink-950/20 to-black flex items-center justify-center pt-20">
+        <div className="text-pink-500">{SvgIcon.Loader}</div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-pink-950/20 to-black pt-20 pb-20">
-        <div className="max-w-md mx-auto px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 text-center">
+      <div className="min-h-screen bg-gradient-to-br from-black via-pink-950/20 to-black pt-32 pb-20 px-4">
+        <div className="max-w-md mx-auto text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+            <div className="w-20 h-20 mx-auto text-pink-500">{SvgIcon.User}</div>
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Profil</h1>
-              <p className="text-gray-400">Vous devez être connecté</p>
+              <h1 className="text-4xl font-bold text-white mb-2">Profile</h1>
+              <p className="text-gray-400 text-lg">Sign in to continue</p>
             </div>
             <Link href="/auth">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-lg transition-all duration-300"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full px-6 py-3 bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white font-semibold rounded-xl transition duration-300 shadow-lg hover:shadow-pink-500/30"
               >
-                Se connecter
+                Sign In
               </motion.button>
             </Link>
           </motion.div>
@@ -263,438 +238,324 @@ export default function Profile() {
     );
   }
 
-  const provider = user.app_metadata?.provider || 'email';
-  const providerIcon = provider === 'google' ? '🔵' : '📧';
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-pink-950/20 to-black pt-20 pb-20">
-      <div className="max-w-5xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-black via-pink-950/20 to-black pt-20 pb-20 px-4">
+      <div className="max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-          {/* Header avec Info Utilisateur */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-4">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="w-16 h-16 bg-gradient-to-br from-pink-500 to-red-500 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg"
-              >
-                {profile?.full_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
-              </motion.div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">
-                  {profile?.full_name || user.email?.split('@')[0]}
-                </h1>
-                <p className="text-gray-400">{providerIcon} Connecté via {provider === 'google' ? 'Google' : 'Email'}</p>
+          {/* Professional Header */}
+          <div className="bg-gradient-to-r from-white/5 to-white/5 border border-white/10 rounded-2xl p-8 lg:p-12">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+              {/* Avatar + Info */}
+              <div className="flex items-center gap-6 flex-1">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-pink-600 to-red-600 rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-lg"
+                >
+                  <div className="w-12 h-12 lg:w-16 lg:h-16">{SvgIcon.User}</div>
+                </motion.div>
+                <div>
+                  <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
+                    {profile?.full_name || user.email?.split('@')[0] || 'User'}
+                  </h1>
+                  <div className="flex flex-col gap-2 text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4">{SvgIcon.Mail}</div>
+                      <span className="text-sm">{user.email}</span>
+                    </div>
+                    <p className="text-sm">Member since {new Date(user.created_at || '').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</p>
+                  </div>
+                </div>
               </div>
+
+              {/* Logout Button */}
+              <motion.button
+                onClick={handleLogout}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600/20 hover:bg-red-600/30 text-red-300 rounded-xl transition border border-red-600/50 font-semibold self-start lg:self-auto"
+              >
+                <div className="w-5 h-5">{SvgIcon.LogOut}</div>
+                Sign Out
+              </motion.button>
             </div>
-            <motion.button
-              onClick={handleLogout}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition border border-red-500/30"
-            >
-              <LogOut size={18} />
-              Déconnexion
-            </motion.button>
           </div>
 
           {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className={`border rounded-lg p-4 flex gap-3 ${
-                error.startsWith('✅')
-                  ? 'bg-green-500/10 border-green-500/30'
-                  : 'bg-red-500/10 border-red-500/30'
-              }`}
-            >
-              <AlertCircle
-                size={20}
-                className={error.startsWith('✅') ? 'text-green-500' : 'text-red-500'}
-              />
-              <p className={error.startsWith('✅') ? 'text-green-300' : 'text-red-300'}>{error}</p>
-            </motion.div>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`border rounded-xl p-4 flex gap-3 ${
+                  error.startsWith('✅')
+                    ? 'bg-green-600/20 border-green-600/50 text-green-300'
+                    : 'bg-red-600/20 border-red-600/50 text-red-300'
+                }`}
+              >
+                <div className="w-5 h-5 flex-shrink-0 mt-0.5">{error.startsWith('✅') ? SvgIcon.Check : SvgIcon.AlertCircle}</div>
+                <p className="text-sm font-medium">{error.replace('✅ ', '')}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Tabs */}
+          {/* Navigation Tabs */}
           <div className="flex gap-2 border-b border-white/10 overflow-x-auto">
             {(['overview', 'gallery', 'settings'] as const).map((tab) => (
               <motion.button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-3 font-medium transition whitespace-nowrap ${
+                className={`px-6 py-4 font-semibold transition whitespace-nowrap flex items-center gap-2 ${
                   activeTab === tab
                     ? 'border-b-2 border-pink-500 text-white'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                {tab === 'overview' && <div className="flex items-center gap-2"><UserIcon size={18} />Aperçu</div>}
-                {tab === 'gallery' && <div className="flex items-center gap-2"><Camera size={18} />Galerie ({photos.length})</div>}
-                {tab === 'settings' && <div className="flex items-center gap-2"><Lock size={18} />Paramètres</div>}
+                {tab === 'overview' && (
+                  <>
+                    <div className="w-5 h-5">{SvgIcon.User}</div>
+                    <span className="hidden sm:inline">Overview</span>
+                  </>
+                )}
+                {tab === 'gallery' && (
+                  <>
+                    <div className="w-5 h-5">{SvgIcon.Gallery}</div>
+                    <span className="hidden sm:inline">Gallery</span>
+                    <span className="text-xs bg-pink-600/30 px-2 py-1 rounded-full">{photos.length}</span>
+                  </>
+                )}
+                {tab === 'settings' && (
+                  <>
+                    <div className="w-5 h-5">{SvgIcon.Settings}</div>
+                    <span className="hidden sm:inline">Settings</span>
+                  </>
+                )}
               </motion.button>
             ))}
           </div>
 
-          {/* OVERVIEW TAB */}
-          {activeTab === 'overview' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              {/* Profile Info Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/5 border border-white/10 rounded-xl p-8 space-y-6"
-              >
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-white">Informations du Profil</h2>
-                  {!isEditMode && (
-                    <motion.button
-                      onClick={() => setIsEditMode(true)}
-                      whileHover={{ scale: 1.05 }}
-                      className="flex items-center gap-2 px-3 py-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 rounded-lg transition"
-                    >
-                      <Edit2 size={16} />
-                      Modifier
-                    </motion.button>
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                {/* Profile Card */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-white">Profile Information</h2>
+                    {!isEditMode && (
+                      <motion.button
+                        onClick={() => setIsEditMode(true)}
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center gap-2 px-4 py-2 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl transition font-semibold"
+                      >
+                        <div className="w-4 h-4">{SvgIcon.Edit}</div>
+                        Edit
+                      </motion.button>
+                    )}
+                  </div>
+
+                  {isEditMode ? (
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-300 mb-3">Full Name</label>
+                        <input
+                          type="text"
+                          value={editForm.full_name}
+                          onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                          placeholder="John Doe"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-300 mb-3">Bio</label>
+                        <textarea
+                          value={editForm.bio}
+                          onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                          placeholder="Tell us about yourself..."
+                          rows={4}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-300 mb-3">Phone</label>
+                        <input
+                          type="tel"
+                          value={editForm.phone}
+                          onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                          placeholder="+243 895 438 484"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
+                        />
+                      </div>
+                      <div className="flex gap-3 pt-4">
+                        <motion.button
+                          onClick={handleSaveProfile}
+                          disabled={isSaving}
+                          whileHover={{ scale: 1.02 }}
+                          className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white font-semibold rounded-xl transition disabled:opacity-50"
+                        >
+                          {isSaving ? 'Saving...' : 'Save Changes'}
+                        </motion.button>
+                        <motion.button
+                          onClick={() => setIsEditMode(false)}
+                          whileHover={{ scale: 1.02 }}
+                          className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition"
+                        >
+                          Cancel
+                        </motion.button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="bg-white/5 rounded-xl p-4">
+                        <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Email</p>
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 text-pink-500">{SvgIcon.Mail}</div>
+                          <p className="text-white font-medium text-sm">{user.email}</p>
+                        </div>
+                      </div>
+                      {profile?.full_name && (
+                        <div className="bg-white/5 rounded-xl p-4">
+                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Full Name</p>
+                          <p className="text-white font-medium text-sm">{profile.full_name}</p>
+                        </div>
+                      )}
+                      {profile?.phone && (
+                        <div className="bg-white/5 rounded-xl p-4">
+                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Phone</p>
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 text-pink-500">{SvgIcon.Phone}</div>
+                            <p className="text-white font-medium text-sm">{profile.phone}</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="bg-white/5 rounded-xl p-4">
+                        <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Member Since</p>
+                        <p className="text-white font-medium text-sm">{new Date(user.created_at || '').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      </div>
+                    </div>
+                  )}
+                  {profile?.bio && !isEditMode && (
+                    <div className="pt-6 border-t border-white/10">
+                      <p className="text-xs font-semibold text-gray-400 uppercase mb-3">Bio</p>
+                      <p className="text-gray-300 leading-relaxed text-sm">{profile.bio}</p>
+                    </div>
                   )}
                 </div>
-
-                {isEditMode ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Nom Complet</label>
-                      <input
-                        type="text"
-                        value={editForm.full_name}
-                        onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                        placeholder="Jean Dupont"
-                        className="w-full px-4 py-2 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Bio</label>
-                      <textarea
-                        value={editForm.bio}
-                        onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                        placeholder="Parlez-nous de vous..."
-                        rows={3}
-                        className="w-full px-4 py-2 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition resize-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Téléphone</label>
-                      <input
-                        type="tel"
-                        value={editForm.phone}
-                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                        placeholder="+243 895 438 484"
-                        className="w-full px-4 py-2 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <motion.button
-                        onClick={handleSaveProfile}
-                        disabled={isSaving}
-                        whileHover={{ scale: 1.05 }}
-                        className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-lg transition"
-                      >
-                        {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
-                      </motion.button>
-                      <motion.button
-                        onClick={() => setIsEditMode(false)}
-                        whileHover={{ scale: 1.05 }}
-                        className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg transition"
-                      >
-                        Annuler
-                      </motion.button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-400 mb-1">Email</p>
-                      <p className="text-white font-medium flex items-center gap-2">
-                        <Mail size={16} className="text-pink-500" />
-                        {user.email}
-                      </p>
-                    </div>
-                    {profile?.full_name && (
-                      <div>
-                        <p className="text-sm text-gray-400 mb-1">Nom</p>
-                        <p className="text-white font-medium">{profile.full_name}</p>
-                      </div>
-                    )}
-                    {profile?.phone && (
-                      <div>
-                        <p className="text-sm text-gray-400 mb-1">Téléphone</p>
-                        <p className="text-white font-medium">{profile.phone}</p>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm text-gray-400 mb-1">Membre depuis</p>
-                      <p className="text-white font-medium">
-                        {new Date(user.created_at || '').toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {profile?.bio && (
-                  <div className="pt-4 border-t border-white/10">
-                    <p className="text-sm text-gray-400 mb-2">Bio</p>
-                    <p className="text-white">{profile.bio}</p>
-                  </div>
-                )}
               </motion.div>
+            )}
 
-              {/* Stats */}
-              <div className="grid md:grid-cols-3 gap-4">
-                {[
-                  { label: 'Photos', value: photos.length, icon: Camera },
-                  { label: 'Partages', value: photos.reduce((acc, p) => acc + (p.shares_count || 0), 0), icon: Share2 },
-                  { label: 'Likes', value: photos.reduce((acc, p) => acc + (p.likes_count || 0), 0), icon: Heart },
-                ].map((stat) => {
-                  const Icon = stat.icon;
-                  return (
-                    <motion.div
-                      key={stat.label}
-                      whileHover={{ y: -5 }}
-                      className="bg-gradient-to-br from-pink-500/20 to-red-500/20 border border-pink-500/30 rounded-lg p-6 text-center"
-                    >
-                      <Icon size={24} className="text-pink-400 mx-auto mb-2" />
-                      <p className="text-3xl font-bold text-white">{stat.value}</p>
-                      <p className="text-gray-400 text-sm mt-1">{stat.label}</p>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-
-          {/* GALLERY TAB */}
-          {activeTab === 'gallery' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              {photos.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-white/5 border border-white/10 rounded-lg p-12 text-center"
-                >
-                  <Camera size={48} className="text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400 mb-4">Aucune photo pour le moment</p>
-                  <Link href="/contact">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      className="px-4 py-2 bg-gradient-to-r from-pink-500 to-red-500 text-white font-bold rounded-lg"
-                    >
-                      Réserver une séance
-                    </motion.button>
-                  </Link>
-                </motion.div>
-              ) : (
-                <>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    {visiblePhotos.map((photo, idx) => (
-                      <motion.div
-                        key={photo.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: (idx % GALLERY_PAGE_SIZE) * 0.05 }}
-                        className="group relative bg-white/5 border border-white/10 rounded-lg overflow-hidden"
-                      >
-                        <div className="relative h-48 bg-black">
+            {activeTab === 'gallery' && (
+              <motion.div key="gallery" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                {visiblePhotos.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {visiblePhotos.map((photo, idx) => (
+                        <motion.div
+                          key={photo.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="group relative aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-pink-500/50 transition"
+                        >
                           <NextImage
                             src={photo.image_url}
-                            alt={photo.title || 'Photo'}
+                            alt={photo.title || `Photo ${idx + 1}`}
                             fill
-                            sizes="(max-width: 768px) 100%, (max-width: 1200px) 50%, 33%"
+                            className="object-cover group-hover:scale-110 transition duration-300"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                             quality={70}
-                            className="object-cover group-hover:scale-110 transition-transform duration-300"
-                            loading={idx < 6 ? 'eager' : 'lazy'}
-                            priority={idx < 6}
+                            loading="lazy"
                           />
-                        </div>
-                        <div className="p-4">
-                          {photo.title && <p className="font-semibold text-white mb-1">{photo.title}</p>}
-                          {photo.description && <p className="text-sm text-gray-400 mb-3">{photo.description}</p>}
-                          <div className="flex gap-2">
-                            <motion.button
-                              onClick={() => sharePhotoLink(photo)}
-                              whileHover={{ scale: 1.1 }}
-                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 rounded-lg transition"
-                            >
-                              {copiedLink === photo.id ? (
-                                <>
-                                  <Check size={16} />
-                                  Copié
-                                </>
-                              ) : (
-                                <>
-                                  <Share2 size={16} />
-                                  Partager
-                                </>
-                              )}
-                            </motion.button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Load More Button - FIX for iPhone memory */}
-                  {visiblePhotos.length < photos.length && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex justify-center pt-6"
-                    >
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setGalleryPage((p) => p + 1)}
-                        className="px-6 py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-pink-500/50 transition"
-                      >
-                        Charger plus ({visiblePhotos.length}/{photos.length})
-                      </motion.button>
-                    </motion.div>
-                  )}
-                </>
-              )}
-            </motion.div>
-          )}
-
-          {/* SETTINGS TAB */}
-          {activeTab === 'settings' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              {/* Change Password */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/5 border border-white/10 rounded-xl p-8"
-              >
-                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                  <Lock size={20} className="text-pink-500" />
-                  Sécurité du Compte
-                </h3>
-
-                {provider === 'email' && (
-                  <div className="space-y-4">
-                    {!showPasswordForm ? (
-                      <motion.button
-                        onClick={() => setShowPasswordForm(true)}
-                        whileHover={{ scale: 1.05 }}
-                        className="px-4 py-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 rounded-lg transition"
-                      >
-                        Changer le mot de passe
-                      </motion.button>
-                    ) : (
-                      <motion.form
-                        onSubmit={handleChangePassword}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="space-y-4"
-                      >
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Nouveau Mot de Passe</label>
-                          <div className="relative">
-                            <input
-                              type={showPasswords.new ? 'text' : 'password'}
-                              value={passwordForm.new}
-                              onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                              placeholder="••••••••"
-                              className="w-full px-4 py-2 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition pr-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                            >
-                              {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Confirmer le Mot de Passe</label>
-                          <div className="relative">
-                            <input
-                              type={showPasswords.confirm ? 'text' : 'password'}
-                              value={passwordForm.confirm}
-                              onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                              placeholder="••••••••"
-                              className="w-full px-4 py-2 bg-white/5 border border-white/15 rounded-lg text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition pr-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                            >
-                              {showPasswords.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                          </div>
-                        </div>
-                        {passwordError && (
-                          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                            <p className="text-red-300 text-sm">{passwordError}</p>
-                          </div>
-                        )}
-                        <div className="flex gap-2">
-                          <motion.button
-                            type="submit"
-                            disabled={isSaving}
-                            whileHover={{ scale: 1.05 }}
-                            className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-red-500 text-white font-bold rounded-lg transition"
-                          >
-                            {isSaving ? 'Changement...' : 'Confirmer'}
-                          </motion.button>
-                          <motion.button
-                            type="button"
-                            onClick={() => {
-                              setShowPasswordForm(false);
-                              setPasswordForm({ current: '', new: '', confirm: '' });
-                              setPasswordError('');
-                            }}
-                            className="flex-1 px-4 py-2 bg-white/10 text-white font-bold rounded-lg transition"
-                          >
-                            Annuler
-                          </motion.button>
-                        </div>
-                      </motion.form>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition" />
+                        </motion.div>
+                      ))}
+                    </div>
+                    {visiblePhotos.length < photos.length && (
+                      <div className="text-center pt-6">
+                        <motion.button
+                          onClick={() => setGalleryPage(galleryPage + 1)}
+                          whileHover={{ scale: 1.02 }}
+                          className="px-6 py-3 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl font-semibold border border-pink-600/50 transition"
+                        >
+                          Load More ({visiblePhotos.length}/{photos.length})
+                        </motion.button>
+                      </div>
                     )}
-                  </div>
-                )}
-
-                {provider === 'google' && (
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                    <p className="text-blue-300 text-sm">
-                      ✅ Vous êtes connecté via Google. La sécurité de votre compte est gérée par Google.
-                    </p>
+                  </>
+                ) : (
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 mx-auto text-gray-500 mb-4">{SvgIcon.Gallery}</div>
+                    <p className="text-gray-400 text-lg">No photos yet</p>
                   </div>
                 )}
               </motion.div>
+            )}
 
-              {/* Account Info */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white/5 border border-white/10 rounded-xl p-8"
-              >
-                <h3 className="text-xl font-bold text-white mb-6">Informations du Compte</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">ID Utilisateur:</span>
-                    <span className="text-white font-mono text-xs break-all max-w-xs">{user.id}</span>
+            {activeTab === 'settings' && (
+              <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                      <div className="w-6 h-6">{SvgIcon.Lock}</div>
+                      Password
+                    </h2>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Fournisseur d&apos;Authentification:</span>
-                    <span className="text-white">{provider === 'google' ? '🔵 Google' : '📧 Email'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Compte créé:</span>
-                    <span className="text-white">{new Date(user.created_at || '').toLocaleDateString('fr-FR')}</span>
-                  </div>
+
+                  {!showPasswordForm ? (
+                    <motion.button
+                      onClick={() => setShowPasswordForm(true)}
+                      whileHover={{ scale: 1.02 }}
+                      className="px-6 py-3 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl font-semibold border border-pink-600/50 transition"
+                    >
+                      Change Password
+                    </motion.button>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">New Password</label>
+                        <input
+                          type="password"
+                          value={passwordForm.new}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white focus:outline-none focus:border-pink-500/50 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">Confirm Password</label>
+                        <input
+                          type="password"
+                          value={passwordForm.confirm}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white focus:outline-none focus:border-pink-500/50 transition"
+                        />
+                      </div>
+                      {passwordError && (
+                        <div className="text-red-400 text-sm font-medium">{passwordError}</div>
+                      )}
+                      <div className="flex gap-3 pt-4">
+                        <motion.button
+                          onClick={handlePasswordChange}
+                          disabled={isSaving}
+                          className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-600 to-red-600 text-white font-semibold rounded-xl transition disabled:opacity-50"
+                        >
+                          {isSaving ? 'Updating...' : 'Update Password'}
+                        </motion.button>
+                        <motion.button
+                          onClick={() => {
+                            setShowPasswordForm(false);
+                            setPasswordForm({ current: '', new: '', confirm: '' });
+                            setPasswordError('');
+                          }}
+                          className="flex-1 px-4 py-3 bg-white/10 text-white font-semibold rounded-xl transition"
+                        >
+                          Cancel
+                        </motion.button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </motion.div>
-            </motion.div>
-          )}
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </div>
