@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, ShoppingBag, User } from 'lucide-react';
+import { Home, ShoppingBag, User, Play } from 'lucide-react';
 
 export default function BottomNavigation() {
   const pathname = usePathname();
@@ -11,6 +11,7 @@ export default function BottomNavigation() {
   const navItems = [
     { href: '/', icon: Home, label: 'Accueil' },
     { href: '/store', icon: ShoppingBag, label: 'Galerie' },
+    { href: '/videos', icon: Play, label: 'Vidéos' },
     { href: '/profile', icon: User, label: 'Profil' },
   ];
 
