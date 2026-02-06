@@ -96,7 +96,7 @@ export default function OptimizedImage({
         sizes={sizes}
         quality={fill ? 80 : 85}
         onError={handleImageError}
-        onLoadingComplete={handleImageLoad}
+        onLoad={handleImageLoad}
         placeholder={blurDataURL ? 'blur' : 'empty'}
         blurDataURL={blurDataURL}
         className={`

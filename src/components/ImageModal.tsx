@@ -291,7 +291,7 @@ export default function ImageModal({
                     placeholder="empty"
                     style={{ objectFit: 'contain' }}
                     draggable={false}
-                    onLoadingComplete={() => setIsImageLoaded(true)}
+                    onLoad={() => setIsImageLoaded(true)}
                     onError={() => setIsImageLoaded(true)}
                   />
                 </motion.div>

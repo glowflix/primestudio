@@ -224,7 +224,7 @@ export default function Carousel({ images, autoplay = true, interval = 5000 }: C
                 className={`object-cover transition-all duration-500 ease-out ${isCurrentLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'}`}
                 style={{ willChange: 'opacity' }}
                 loading={current === 0 ? 'eager' : 'lazy'}
-                onLoadingComplete={() => {
+                onLoad={() => {
                   setIsCurrentLoaded(true);
                   setImageError(null);
                   ImageDiagnosticsTracker.trackImageLoad(currentImageSrc, true);
