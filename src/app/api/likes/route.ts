@@ -6,12 +6,18 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+const isUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
 export async function POST(req: Request) {
   try {
     const { photoId, userId, action } = await req.json();
 
     if (!photoId || !userId) {
       return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+    }
+    if (!isUuid(photoId) || !isUuid(userId)) {
+      return NextResponse.json({ ok: false, liked: false });
     }
 
     if (action === 'like') {
@@ -66,6 +72,9 @@ export async function GET(req: Request) {
 
     if (!photoId) {
       return NextResponse.json({ error: 'Missing photoId' }, { status: 400 });
+    }
+    if (!isUuid(photoId)) {
+      return NextResponse.json({ count: 0, userLiked: false });
     }
 
     // Get like count

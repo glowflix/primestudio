@@ -2,18 +2,23 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { Search } from 'lucide-react';
+import { Search, Heart, MessageCircle } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import InstagramModal from '@/components/InstagramModal';
 import Image from 'next/image';
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseClient } from '@/lib/supabase/client';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+type StoreImage = {
+  id: string;
+  src: string;
+  title: string;
+  category: string;
+  description: string;
+  userId?: string;
+  model_name?: string;
+};
 
-const galleryImages = [
+const galleryImages: StoreImage[] = [
   {
     id: '1',
     src: '/images/267A1009.webp',
@@ -75,12 +80,16 @@ const categories = [
 export default function Store() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [modelFilter, setModelFilter] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [localUser, setLocalUser] = useState<{ id: string } | null>(null);
-  const [supabasePhotos, setSupabasePhotos] = useState<Array<{ id: string; src: string; title: string; category: string; description: string; userId?: string }>>([]);
+  const [supabasePhotos, setSupabasePhotos] = useState<StoreImage[]>([]);
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
   // Get user
   useEffect(() => {
+    const supabase = createSupabaseClient();
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setLocalUser(user);
@@ -90,6 +99,7 @@ export default function Store() {
 
   // Load photos from Supabase
   useEffect(() => {
+    const supabase = createSupabaseClient();
     const loadPhotos = async () => {
       try {
         const { data, error } = await supabase
@@ -109,6 +119,7 @@ export default function Store() {
             title: photo.title || 'Sans titre',
             category: photo.category || 'portrait',
             description: photo.model_name ? `Modèle: ${photo.model_name}` : 'Photo de prime-studio',
+            model_name: photo.model_name || undefined,
             userId: photo.user_id,
           }));
           setSupabasePhotos(photos);
@@ -122,17 +133,74 @@ export default function Store() {
     loadPhotos();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const model = new URLSearchParams(window.location.search).get('model');
+    if (model) {
+      setModelFilter(model);
+      setSearchTerm(model);
+    }
+  }, []);
+
   // Combine static gallery with Supabase photos and filter
   const filteredImages = useMemo(() => {
-    const allImages = [...galleryImages, ...supabasePhotos];
+    const allImages = modelFilter ? [...supabasePhotos] : [...galleryImages, ...supabasePhotos];
     return allImages.filter((image) => {
+      if (modelFilter) {
+        return (image.model_name || '').toLowerCase() === modelFilter.toLowerCase();
+      }
       const matchCategory = selectedCategory === 'all' || image.category === selectedCategory;
       const matchSearch =
         image.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        image.description.toLowerCase().includes(searchTerm.toLowerCase());
+        image.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (image.model_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
       return matchCategory && matchSearch;
     });
-  }, [selectedCategory, searchTerm, supabasePhotos]);
+  }, [selectedCategory, searchTerm, supabasePhotos, modelFilter]);
+
+  useEffect(() => {
+    const isUuid = (value: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+    const loadCounts = async () => {
+      const target = supabasePhotos.filter((photo) => isUuid(photo.id));
+      if (target.length === 0) return;
+
+      const likes = await Promise.all(
+        target.map(async (photo) => {
+          try {
+            const res = await fetch(`/api/likes?photoId=${photo.id}`);
+            const data = await res.json();
+            return [photo.id, Number(data.count || 0)] as const;
+          } catch {
+            return [photo.id, 0] as const;
+          }
+        })
+      );
+
+      const comments = await Promise.all(
+        target.map(async (photo) => {
+          try {
+            const res = await fetch(`/api/comments?photoId=${photo.id}`);
+            const data = await res.json();
+            return [photo.id, Array.isArray(data.comments) ? data.comments.length : 0] as const;
+          } catch {
+            return [photo.id, 0] as const;
+          }
+        })
+      );
+
+      setLikeCounts(Object.fromEntries(likes));
+      setCommentCounts(Object.fromEntries(comments));
+    };
+
+    loadCounts();
+  }, [supabasePhotos]);
+
+  const modelAvatar = useMemo(() => {
+    if (!modelFilter) return null;
+    return supabasePhotos.find((photo) => (photo.model_name || '').toLowerCase() === modelFilter.toLowerCase())?.src || null;
+  }, [modelFilter, supabasePhotos]);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -213,6 +281,34 @@ export default function Store() {
       {/* Gallery Grid - 2 COLUMNS ON MOBILE */}
       <section className="py-4 md:py-8">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+          {modelFilter && (
+            <div className="flex items-center gap-3 mb-4 px-2 py-3 rounded-xl border border-white/10 bg-white/5">
+              <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden flex-shrink-0">
+                {modelAvatar && (
+                  <Image
+                    src={modelAvatar}
+                    alt={modelFilter}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 object-cover"
+                  />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold text-sm truncate">{modelFilter}</p>
+                <p className="text-gray-400 text-xs truncate">Galerie du modèle</p>
+              </div>
+              <button
+                onClick={() => {
+                  setModelFilter(null);
+                  setSearchTerm('');
+                }}
+                className="text-xs text-white/70 hover:text-white transition"
+              >
+                Voir tout
+              </button>
+            </div>
+          )}
           <AnimatePresence mode="wait">
             {filteredImages.length > 0 ? (
               <motion.div
@@ -244,9 +340,21 @@ export default function Store() {
                       </div>
 
                       {/* Overlay - Only on hover/desktop */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 md:p-4">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 md:p-4">
                         <h3 className="text-sm md:text-lg font-bold text-white line-clamp-1">{image.title}</h3>
                         <p className="text-gray-200 text-xs hidden md:block line-clamp-1">{image.description}</p>
+                        {likeCounts[image.id] !== undefined && commentCounts[image.id] !== undefined && (
+                          <div className="mt-2 flex items-center gap-3 text-[11px] text-white/80">
+                            <span className="inline-flex items-center gap-1">
+                              <Heart size={12} className="text-white/70" />
+                              {likeCounts[image.id]}
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <MessageCircle size={12} className="text-white/70" />
+                              {commentCounts[image.id]}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Category Tag - Hidden on mobile */}

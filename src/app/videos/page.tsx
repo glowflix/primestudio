@@ -104,7 +104,7 @@ export default function VideosPage() {
 
                     {/* Overlay Info */}
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4"
+                      className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 pointer-events-none group-hover:pointer-events-auto"
                       whileHover={{ opacity: 1 }}
                     >
                       <h3 className="text-white font-bold text-lg">{video.title}</h3>

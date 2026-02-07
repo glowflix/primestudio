@@ -46,13 +46,21 @@ type UserPhoto = {
   created_at: string;
 };
 
-type TabType = 'overview' | 'gallery' | 'settings';
+type SavedPhoto = {
+  id: string;
+  image_url: string;
+  title?: string;
+  created_at?: string;
+};
+
+type TabType = 'overview' | 'gallery' | 'saved' | 'settings';
 
 export default function Profile() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [photos, setPhotos] = useState<UserPhoto[]>([]);
+  const [savedPhotos, setSavedPhotos] = useState<SavedPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -62,6 +70,7 @@ export default function Profile() {
   const GALLERY_PAGE_SIZE = 12;
   const [galleryPage, setGalleryPage] = useState(1);
   const visiblePhotos = photos.slice(0, galleryPage * GALLERY_PAGE_SIZE);
+  const visibleSaved = savedPhotos.slice(0, galleryPage * GALLERY_PAGE_SIZE);
 
   // Edit Mode
   const [isEditMode, setIsEditMode] = useState(false);
@@ -106,6 +115,24 @@ export default function Profile() {
     }
   }, []);
 
+  const loadSavedPhotos = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
+    try {
+      const { data, error: err } = await client
+        .from('saved_photos')
+        .select('photos(id, image_url, title, created_at)')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (err) throw err;
+
+      const mapped = (data || [])
+        .map((row: { photos: SavedPhoto | null }) => row.photos)
+        .filter((photo): photo is SavedPhoto => Boolean(photo));
+      setSavedPhotos(mapped);
+    } catch (err) {
+      console.error('Error loading saved photos:', err);
+    }
+  }, []);
+
   // Initialize
   useEffect(() => {
     let mounted = true;
@@ -134,6 +161,7 @@ export default function Profile() {
         setUser(data.session.user);
         await loadProfile(client!, data.session.user.id);
         await loadPhotos(client!, data.session.user.id);
+        await loadSavedPhotos(client!, data.session.user.id);
         setIsLoading(false);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Error loading session';
@@ -146,7 +174,15 @@ export default function Profile() {
 
     initAuth();
     return () => { mounted = false; };
-  }, [router, loadProfile, loadPhotos]);
+  }, [router, loadProfile, loadPhotos, loadSavedPhotos]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const tab = new URLSearchParams(window.location.search).get('tab') as TabType | null;
+    if (tab && ['overview', 'gallery', 'saved', 'settings'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, []);
 
   const handleLogout = async () => {
     if (!supabase) return;
@@ -303,7 +339,7 @@ export default function Profile() {
 
           {/* Navigation Tabs */}
           <div className="flex gap-2 border-b border-white/10 overflow-x-auto">
-            {(['overview', 'gallery', 'settings'] as const).map((tab) => (
+            {(['overview', 'gallery', 'saved', 'settings'] as const).map((tab) => (
               <motion.button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -324,6 +360,13 @@ export default function Profile() {
                     <div className="w-5 h-5">{SvgIcon.Gallery}</div>
                     <span className="hidden sm:inline">Gallery</span>
                     <span className="text-xs bg-pink-600/30 px-2 py-1 rounded-full">{photos.length}</span>
+                  </>
+                )}
+                {tab === 'saved' && (
+                  <>
+                    <div className="w-5 h-5">{SvgIcon.Gallery}</div>
+                    <span className="hidden sm:inline">Saved</span>
+                    <span className="text-xs bg-pink-600/30 px-2 py-1 rounded-full">{savedPhotos.length}</span>
                   </>
                 )}
                 {tab === 'settings' && (
@@ -487,6 +530,55 @@ export default function Profile() {
                   <div className="text-center py-16">
                     <div className="w-16 h-16 mx-auto text-gray-500 mb-4">{SvgIcon.Gallery}</div>
                     <p className="text-gray-400 text-lg">No photos yet</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === 'saved' && (
+              <motion.div key="saved" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                {visibleSaved.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {visibleSaved.map((photo, idx) => (
+                        <motion.div
+                          key={photo.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="group relative aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-pink-500/50 transition"
+                        >
+                          <NextImage
+                            src={photo.image_url}
+                            alt={photo.title || `Saved ${idx + 1}`}
+                            fill
+                            className="object-cover group-hover:scale-110 transition duration-300"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                            quality={70}
+                            loading="lazy"
+                          />
+                          <div className="absolute top-2 left-2 bg-pink-500/90 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                            Saved
+                          </div>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition" />
+                        </motion.div>
+                      ))}
+                    </div>
+                    {visibleSaved.length < savedPhotos.length && (
+                      <div className="text-center pt-6">
+                        <motion.button
+                          onClick={() => setGalleryPage(galleryPage + 1)}
+                          whileHover={{ scale: 1.02 }}
+                          className="px-6 py-3 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl font-semibold border border-pink-600/50 transition"
+                        >
+                          Load More ({visibleSaved.length}/{savedPhotos.length})
+                        </motion.button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 mx-auto text-gray-500 mb-4">{SvgIcon.Gallery}</div>
+                    <p className="text-gray-400 text-lg">No saved photos yet</p>
                   </div>
                 )}
               </motion.div>

@@ -6,12 +6,18 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+const isUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
 export async function POST(req: Request) {
   try {
     const { photoId, userId, content } = await req.json();
 
     if (!photoId || !userId || !content) {
       return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+    }
+    if (!isUuid(photoId) || !isUuid(userId)) {
+      return NextResponse.json({ ok: false, comments: [] });
     }
 
     const { data, error } = await supabase.from('comments').insert({
@@ -41,10 +47,13 @@ export async function GET(req: Request) {
     if (!photoId) {
       return NextResponse.json({ error: 'Missing photoId' }, { status: 400 });
     }
+    if (!isUuid(photoId)) {
+      return NextResponse.json({ comments: [] });
+    }
 
     const { data, error } = await supabase
       .from('comments')
-      .select('*, user:user_id(email)')
+      .select('*')
       .eq('photo_id', photoId)
       .order('created_at', { ascending: false });
 
@@ -67,6 +76,9 @@ export async function DELETE(req: Request) {
 
     if (!commentId || !userId) {
       return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+    }
+    if (!isUuid(commentId) || !isUuid(userId)) {
+      return NextResponse.json({ ok: false });
     }
 
     // Verify ownership
