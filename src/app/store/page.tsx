@@ -77,7 +77,7 @@ export default function Store() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [localUser, setLocalUser] = useState<{ id: string } | null>(null);
-  const [supabasePhotos, setSupabasePhotos] = useState<Array<{ id: string; src: string; title: string; category: string; description: string }>>([]);
+  const [supabasePhotos, setSupabasePhotos] = useState<Array<{ id: string; src: string; title: string; category: string; description: string; userId?: string }>>([]);
 
   // Get user
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function Store() {
       try {
         const { data, error } = await supabase
           .from('photos')
-          .select('id, image_url, title, category, model_name, active')
+          .select('id, image_url, title, category, model_name, active, user_id')
           .eq('active', true);
 
         if (error) {
@@ -103,12 +103,13 @@ export default function Store() {
         }
 
         if (data && data.length > 0) {
-          const photos = data.map((photo: { id: string; image_url: string; title: string | null; category: string | null; model_name: string | null }) => ({
+          const photos = data.map((photo: { id: string; image_url: string; title: string | null; category: string | null; model_name: string | null; user_id?: string }) => ({
             id: photo.id,
             src: photo.image_url,
             title: photo.title || 'Sans titre',
             category: photo.category || 'portrait',
             description: photo.model_name ? `Modèle: ${photo.model_name}` : 'Photo de prime-studio',
+            userId: photo.user_id,
           }));
           setSupabasePhotos(photos);
           console.log('✅ Photos Supabase chargées:', photos.length);
@@ -221,7 +222,7 @@ export default function Store() {
                 animate="visible"
                 key={selectedCategory + searchTerm}
               >
-                {filteredImages.map((image, index) => {
+                {filteredImages.map((image, index: number) => {
                   return (
                     <motion.button
                       key={image.id}
