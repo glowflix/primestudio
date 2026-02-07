@@ -79,8 +79,7 @@ export default function Store() {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedPhotoViewer, setSelectedPhotoViewer] = useState<{ id: string; src: string; title: string; category: string; description: string } | null>(null);
   const [localUser, setLocalUser] = useState<{ id: string } | null>(null);
-  const [allImages, setAllImages] = useState(galleryImages);
-  const [loading, setLoading] = useState(true);
+  const [supabasePhotos, setSupabasePhotos] = useState<Array<{ id: string; src: string; title: string; category: string; description: string }>>([]);
 
   // Get user
   useEffect(() => {
@@ -97,37 +96,35 @@ export default function Store() {
       try {
         const { data, error } = await supabase
           .from('photos')
-          .select('*')
+          .select('id, image_url, title, category, model_name, active')
           .eq('active', true);
 
         if (error) {
-          console.error('Error loading photos:', error);
-          setLoading(false);
+          console.error('❌ Error loading photos:', error.message);
           return;
         }
 
-        // Convert Supabase photos to gallery format
-        const supabasePhotos = (data || []).map((photo: Record<string, any>) => ({
-          id: photo.id,
-          src: photo.image_url,
-          title: photo.title || 'Sans titre',
-          category: photo.category || 'portrait',
-          description: photo.model_name ? `Modèle: ${photo.model_name}` : 'Photo de prime-studio',
-        }));
-
-        // Combine with static gallery images
-        setAllImages([...galleryImages, ...supabasePhotos]);
-        console.log('✅ Photos chargées:', supabasePhotos.length);
+        if (data && data.length > 0) {
+          const photos = data.map((photo: { id: string; image_url: string; title: string | null; category: string | null; model_name: string | null }) => ({
+            id: photo.id,
+            src: photo.image_url,
+            title: photo.title || 'Sans titre',
+            category: photo.category || 'portrait',
+            description: photo.model_name ? `Modèle: ${photo.model_name}` : 'Photo de prime-studio',
+          }));
+          setSupabasePhotos(photos);
+          console.log('✅ Photos Supabase chargées:', photos.length);
+        }
       } catch (err) {
-        console.error('Failed to load photos:', err);
-      } finally {
-        setLoading(false);
+        console.error('❌ Failed to load photos:', err);
       }
     };
 
     loadPhotos();
   }, []);
 
+  // Combine static gallery with Supabase photos
+  const allImages = [...galleryImages, ...supabasePhotos];
   const imagesList = allImages.map((img) => img.src);
 
   const filteredImages = useMemo(() => {
@@ -138,7 +135,7 @@ export default function Store() {
         image.description.toLowerCase().includes(searchTerm.toLowerCase());
       return matchCategory && matchSearch;
     });
-  }, [selectedCategory, searchTerm, allImages]);
+  }, [selectedCategory, searchTerm, supabasePhotos]);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
