@@ -2,12 +2,20 @@
 
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Carousel from '@/components/Carousel';
 import ServicesGrid from '@/components/ServicesGrid';
 import { ArrowRight, Camera, Sparkles } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
-const galleryImages = [
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Images locales (fallback)
+const localGalleryImages = [
   '/images/267A1009.webp',
   '/images/267A1011.webp',
   '/images/267A1031.webp',
@@ -39,6 +47,41 @@ const itemVariants: Variants = {
 };
 
 export default function Home() {
+  const [carouselImages, setCarouselImages] = useState<string[]>(localGalleryImages);
+  const [loadingCarousel, setLoadingCarousel] = useState(true);
+
+  // Charger les images Supabase + mélanger avec locales
+  useEffect(() => {
+    const loadImages = async () => {
+      try {
+        const { data } = await supabase
+          .from('photos')
+          .select('image_url')
+          .eq('active', true)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (data && data.length > 0) {
+          // Combiner: Supabase en premier, puis images locales
+          const supabaseUrls = data.map((p) => p.image_url);
+          const mergedImages = [...supabaseUrls, ...localGalleryImages];
+          setCarouselImages(mergedImages);
+        } else {
+          // Si pas de photos Supabase, utiliser locales
+          setCarouselImages(localGalleryImages);
+        }
+      } catch (err) {
+        console.error('Failed to load Supabase photos:', err);
+        // Fallback aux images locales
+        setCarouselImages(localGalleryImages);
+      } finally {
+        setLoadingCarousel(false);
+      }
+    };
+
+    loadImages();
+  }, []);
+
   return (
     <>
       {/* Hero Section */}
@@ -116,7 +159,11 @@ export default function Home() {
             transition={{ delay: 0.4 }}
           >
             <h2 className="text-3xl font-bold text-center mb-12">Portfolio Récent</h2>
-            <Carousel images={galleryImages} />
+            {loadingCarousel ? (
+              <div className="text-center py-12 text-gray-400">Chargement des photos...</div>
+            ) : (
+              <Carousel images={carouselImages} />
+            )}
           </motion.div>
         </div>
       </section>

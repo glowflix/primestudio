@@ -3,9 +3,16 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Search } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import ImageModal from '@/components/ImageModal';
+import PhotoViewer from '@/components/PhotoViewer';
 import Image from 'next/image';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const galleryImages = [
   {
@@ -70,6 +77,17 @@ export default function Store() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [selectedPhotoViewer, setSelectedPhotoViewer] = useState<any>(null);
+  const [localUser, setLocalUser] = useState<any>(null);
+
+  // Get user
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setLocalUser(user);
+    };
+    getUser();
+  }, []);
 
   const imagesList = galleryImages.map((img) => img.src);
 
@@ -179,7 +197,7 @@ export default function Store() {
                     <motion.button
                       key={image.id}
                       variants={itemVariants}
-                      onClick={() => handleImageClick(globalIndex)}
+                      onClick={() => setSelectedPhotoViewer(image)}
                       className="cursor-pointer group relative overflow-hidden rounded-md md:rounded-xl aspect-square"
                     >
                       <div className="relative w-full h-full">
@@ -231,6 +249,19 @@ export default function Store() {
         onClose={() => setSelectedImageIndex(null)}
         onIndexChange={(index) => setSelectedImageIndex(index)}
       />
+
+      {/* Photo Viewer (Instagram-like) */}
+      {selectedPhotoViewer && (
+        <PhotoViewer
+          photoId={selectedPhotoViewer.id}
+          imageUrl={selectedPhotoViewer.src}
+          title={selectedPhotoViewer.title}
+          modelName={selectedPhotoViewer.title}
+          category={selectedPhotoViewer.category}
+          userId={localUser?.id || null}
+          onClose={() => setSelectedPhotoViewer(null)}
+        />
+      )}
 
       {/* CTA Section - Hidden on mobile */}
       <section className="hidden md:block py-16 bg-gradient-to-r from-pink-950/30 to-red-950/30">
