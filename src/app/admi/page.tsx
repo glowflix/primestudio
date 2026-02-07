@@ -4,13 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Upload, AlertCircle, CheckCircle } from 'lucide-react';
-import { createClient, type User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 import OptimizedImage from '@/components/OptimizedImage';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { createSupabaseClient } from '@/lib/supabase/client';
 
 type FormData = {
   title: string;
@@ -37,26 +33,32 @@ export default function AdminPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      try {
+        const supabase = createSupabaseClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
 
-      if (!user) {
+        if (!user) {
+          router.push('/auth');
+          return;
+        }
+
+        const adminEmailsList = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
+          .split(',')
+          .map(e => e.trim());
+        
+        const isAdminUser = !!(user.email && adminEmailsList.includes(user.email));
+        setIsAdmin(isAdminUser);
+
+        if (!isAdminUser) {
+          setMessage({ type: 'error', text: 'Accès refusé. Admin uniquement.' });
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth check error:', error);
         router.push('/auth');
-        return;
       }
-
-      const adminEmailsList = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
-        .split(',')
-        .map(e => e.trim());
-      
-      const isAdminUser = !!(user.email && adminEmailsList.includes(user.email));
-      setIsAdmin(isAdminUser);
-
-      if (!isAdminUser) {
-        setMessage({ type: 'error', text: 'Accès refusé. Admin uniquement.' });
-      }
-
-      setLoading(false);
     };
 
     checkAuth();

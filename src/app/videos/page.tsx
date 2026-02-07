@@ -93,10 +93,10 @@ export default function VideosPage() {
                       <iframe
                         width="100%"
                         height="100%"
-                        src={`https://www.youtube.com/embed/${video.id}?rel=0&modestbranding=1`}
+                        src={`https://www.youtube.com/embed/${video.id}?rel=0&modestbranding=1&controls=1&enablejsapi=1&playsinline=1`}
                         title={video.title}
                         frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                         allowFullScreen
                         className="w-full h-full"
                       />
