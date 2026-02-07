@@ -7,12 +7,7 @@ import Link from 'next/link';
 import Carousel from '@/components/Carousel';
 import ServicesGrid from '@/components/ServicesGrid';
 import { ArrowRight, Camera, Sparkles } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { createSupabaseClient } from '@/lib/supabase/client';
 
 // Images locales (fallback)
 const localGalleryImages = [
@@ -54,6 +49,7 @@ export default function Home() {
   useEffect(() => {
     const loadImages = async () => {
       try {
+        const supabase = createSupabaseClient();
         const { data } = await supabase
           .from('photos')
           .select('image_url')
@@ -160,7 +156,11 @@ export default function Home() {
           >
             <h2 className="text-3xl font-bold text-center mb-12">Portfolio Récent</h2>
             {loadingCarousel ? (
-              <div className="text-center py-12 text-gray-400">Chargement des photos...</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="aspect-square rounded-xl bg-white/5 border border-white/10 animate-pulse" />
+                ))}
+              </div>
             ) : (
               <Carousel images={carouselImages} />
             )}

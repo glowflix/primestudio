@@ -84,6 +84,7 @@ export default function Store() {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [localUser, setLocalUser] = useState<{ id: string } | null>(null);
   const [supabasePhotos, setSupabasePhotos] = useState<StoreImage[]>([]);
+  const [isLoadingPhotos, setIsLoadingPhotos] = useState(true);
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
@@ -108,7 +109,7 @@ export default function Store() {
           .eq('active', true);
 
         if (error) {
-          console.error('❌ Error loading photos:', error.message);
+          console.error('??? Error loading photos:', error.message);
           return;
         }
 
@@ -118,15 +119,17 @@ export default function Store() {
             src: photo.image_url,
             title: photo.title || 'Sans titre',
             category: photo.category || 'portrait',
-            description: photo.model_name ? `Modèle: ${photo.model_name}` : 'Photo de prime-studio',
+            description: photo.model_name ? `Mod??le: ${photo.model_name}` : 'Photo de prime-studio',
             model_name: photo.model_name || undefined,
             userId: photo.user_id,
           }));
           setSupabasePhotos(photos);
-          console.log('✅ Photos Supabase chargées:', photos.length);
+          console.log('??? Photos Supabase charg??es:', photos.length);
         }
       } catch (err) {
-        console.error('❌ Failed to load photos:', err);
+        console.error('??? Failed to load photos:', err);
+      } finally {
+        setIsLoadingPhotos(false);
       }
     };
 
@@ -310,7 +313,16 @@ export default function Store() {
             </div>
           )}
           <AnimatePresence mode="wait">
-            {filteredImages.length > 0 ? (
+            {isLoadingPhotos ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 md:gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-square rounded-md md:rounded-xl bg-white/5 border border-white/10 animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : filteredImages.length > 0 ? (
               <motion.div
                 className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 md:gap-4"
                 variants={containerVariants}

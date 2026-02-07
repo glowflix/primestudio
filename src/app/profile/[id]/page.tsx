@@ -6,12 +6,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { createSupabaseClient } from '@/lib/supabase/client';
 
 interface UserProfile {
   id: string;
@@ -39,6 +34,7 @@ export default function ModelProfile() {
 
   useEffect(() => {
     if (!userId) return;
+    const supabase = createSupabaseClient();
 
     const loadProfile = async () => {
       try {
