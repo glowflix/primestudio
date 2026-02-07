@@ -126,7 +126,7 @@ export default function Profile() {
 
       const mapped = (data || [])
         .map((row: { photos: SavedPhoto | null }) => row.photos)
-        .filter((photo): photo is SavedPhoto => Boolean(photo));
+        .filter((photo: SavedPhoto | null): photo is SavedPhoto => Boolean(photo));
       setSavedPhotos(mapped);
     } catch (err) {
       console.error('Error loading saved photos:', err);
