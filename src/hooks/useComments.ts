@@ -13,10 +13,6 @@ export function useComments(photoId: string) {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchComments();
-  }, [photoId]);
-
   const fetchComments = async () => {
     try {
       const res = await fetch(`/api/comments?photoId=${photoId}`);
@@ -30,6 +26,10 @@ export function useComments(photoId: string) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchComments();
+  }, [photoId]);
 
   const addComment = async (userId: string, content: string) => {
     try {

@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
     // Insert to Supabase
     console.log('💾 Inserting to Supabase...');
-    const { data, error } = await supabase.from('photos').insert({
+    const { error } = await supabase.from('photos').insert({
       id: photoId,
       title: title || null,
       category,
@@ -88,10 +88,11 @@ export async function POST(req: Request) {
       image_url: upload.secure_url,
       cloudinary_public_id: upload.public_id,
     });
-  } catch (e: any) {
-    console.error('🔴 Upload exception:', e);
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Server error';
+    console.error('🔴 Upload exception:', error);
     return NextResponse.json(
-      { error: e.message || 'Server error' },
+      { error },
       { status: 500 }
     );
   }

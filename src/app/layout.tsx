@@ -49,6 +49,8 @@ export default function RootLayout({
         {/* DNS Prefetch for faster resolution */}
         <link rel="dns-prefetch" href="https://wa.me" />
         <link rel="dns-prefetch" href="https://www.facebook.com" />
+        {/* Favicon */}
+        <link rel="icon" href="/icons/logo.ico" type="image/x-icon" />
         {/* Optimize for Core Web Vitals */}
         <meta name="referrer" content="strict-origin-when-cross-origin" />
       </head>

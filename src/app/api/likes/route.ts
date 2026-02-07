@@ -48,10 +48,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-  } catch (e: any) {
-    console.error('Like error:', e);
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Unknown error';
+    console.error('Like error:', error);
     return NextResponse.json(
-      { error: e.message || 'Server error' },
+      { error },
       { status: 500 }
     );
   }
@@ -87,10 +88,11 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({ count: count || 0, userLiked });
-  } catch (e: any) {
-    console.error('Get likes error:', e);
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Unknown error';
+    console.error('Get likes error:', error);
     return NextResponse.json(
-      { error: e.message || 'Server error' },
+      { error },
       { status: 500 }
     );
   }

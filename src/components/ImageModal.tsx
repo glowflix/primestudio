@@ -140,7 +140,7 @@ export default function ImageModal({
     setZoom(1);
     if (transitionTimeoutRef.current) window.clearTimeout(transitionTimeoutRef.current);
     transitionTimeoutRef.current = window.setTimeout(() => setIsTransitioning(false), 400);
-  }, [clampedIndex, safeImages.length, onIndexChange, isMobile]);
+  }, [clampedIndex, safeImages.length, onIndexChange]);
 
   const handlePrevious = useCallback(() => {
     const now = Date.now();

@@ -161,8 +161,9 @@ export async function verifyImagePaths(srcs: string[]): Promise<Record<string, b
   return results;
 }
 
-export default {
+const exported = {
   ImageDiagnosticsTracker,
   verifyImagePath,
   verifyImagePaths,
 };
+export default exported;

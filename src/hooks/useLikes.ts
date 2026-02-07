@@ -5,10 +5,6 @@ export function useLikes(photoId: string, userId: string | null) {
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLikes();
-  }, [photoId, userId]);
-
   const fetchLikes = async () => {
     try {
       const params = new URLSearchParams({ photoId });
@@ -25,6 +21,10 @@ export function useLikes(photoId: string, userId: string | null) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchLikes();
+  }, [photoId, userId]);
 
   const toggleLike = async () => {
     if (!userId) return;
