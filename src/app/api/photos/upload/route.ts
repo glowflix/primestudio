@@ -89,10 +89,11 @@ export async function POST(req: Request) {
       cloudinary_public_id: upload.public_id,
     });
   } catch (e) {
-    const error = e instanceof Error ? e.message : 'Server error';
+    const error = e instanceof Error ? e.message : String(e);
     console.error('🔴 Upload exception:', error);
+    console.error('🔴 Full error:', e);
     return NextResponse.json(
-      { error },
+      { error: error || 'Server error' },
       { status: 500 }
     );
   }
