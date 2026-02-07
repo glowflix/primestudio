@@ -26,13 +26,12 @@ const SvgIcon = {
 
 type UserProfile = {
   id: string;
-  email: string;
-  full_name?: string;
+  username?: string;
+  display_name?: string;
   avatar_url?: string;
   bio?: string;
-  phone?: string;
-  created_at: string;
-  provider: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 type UserPhoto = {
@@ -64,6 +63,7 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [supabase, setSupabase] = useState<ReturnType<typeof createSupabaseClient> | null>(null);
 
   // Pagination
@@ -74,26 +74,29 @@ export default function Profile() {
 
   // Edit Mode
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editForm, setEditForm] = useState({ full_name: '', bio: '', phone: '' });
+  const [editForm, setEditForm] = useState({ display_name: '', username: '', bio: '', avatar_url: '' });
   const [isSaving, setIsSaving] = useState(false);
 
   // Password
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [passwordError, setPasswordError] = useState('');
+  const [emailForm, setEmailForm] = useState({ email: '' });
+  const [emailError, setEmailError] = useState('');
 
 
   // --- Déclaration des callbacks avant le useEffect ---
   const loadProfile = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
     try {
-      const { data, error: err } = await client.from('user_profiles').select('*').eq('id', userId).single();
+      const { data, error: err } = await client.from('profiles').select('*').eq('id', userId).single();
       if (err && err.code !== 'PGRST116') throw err;
       if (data) {
         setProfile(data);
         setEditForm({
-          full_name: data.full_name || '',
+          display_name: data.display_name || '',
+          username: data.username || '',
           bio: data.bio || '',
-          phone: data.phone || '',
+          avatar_url: data.avatar_url || '',
         });
       }
     } catch (err) {
@@ -104,8 +107,8 @@ export default function Profile() {
   const loadPhotos = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
     try {
       const { data, error: err } = await client
-        .from('user_photos')
-        .select('*')
+        .from('photos')
+        .select('id, user_id, image_url, title, description, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
       if (err) throw err;
@@ -199,10 +202,10 @@ export default function Profile() {
     setIsSaving(true);
     try {
       const { error: err } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .upsert({ id: user.id, ...editForm }, { onConflict: 'id' });
       if (err) throw err;
-      setProfile({ ...profile!, ...editForm, id: user.id, email: user.email || '', created_at: user.created_at || '', provider: user.app_metadata?.provider || 'email' });
+      setProfile({ ...(profile || { id: user.id }), ...editForm });
       setIsEditMode(false);
       setError('✅ Profile updated successfully');
       setTimeout(() => setError(''), 3000);
@@ -238,6 +241,26 @@ export default function Profile() {
       setTimeout(() => setError(''), 3000);
     } catch (err) {
       setPasswordError(err instanceof Error ? err.message : 'Error updating password');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEmailChange = async () => {
+    setEmailError('');
+    if (!emailForm.email) {
+      setEmailError('Please enter your new email');
+      return;
+    }
+    if (!supabase) return;
+    setIsSaving(true);
+    try {
+      const { error: err } = await supabase.auth.updateUser({ email: emailForm.email });
+      if (err) throw err;
+      setError('âœ… Email update sent. Check your inbox to confirm.');
+      setTimeout(() => setError(''), 3000);
+    } catch (err) {
+      setEmailError(err instanceof Error ? err.message : 'Error updating email');
     } finally {
       setIsSaving(false);
     }
@@ -281,19 +304,87 @@ export default function Profile() {
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
           {/* Professional Header */}
-          <div className="bg-gradient-to-r from-white/5 to-white/5 border border-white/10 rounded-2xl p-8 lg:p-12">
+          <div className="bg-gradient-to-r from-white/5 to-white/5 border border-white/10 rounded-2xl p-8 lg:p-12 relative">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="md:hidden absolute top-4 right-4 w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center"
+              aria-label="Menu"
+            >
+              <div className="w-5 h-5 flex flex-col justify-center gap-1.5">
+                <span className="block h-0.5 w-full bg-white/80" />
+                <span className="block h-0.5 w-full bg-white/80" />
+                <span className="block h-0.5 w-full bg-white/80" />
+              </div>
+            </button>
+
+            <AnimatePresence>
+              {showMobileMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="md:hidden absolute top-16 right-4 z-20 w-52 rounded-xl border border-white/10 bg-black/90 backdrop-blur-md p-2 space-y-1"
+                >
+                  <button
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      router.push('/messages');
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition"
+                  >
+                    Messager
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      setActiveTab('overview');
+                      setIsEditMode(true);
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition"
+                  >
+                    Modifier Profil
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      setActiveTab('settings');
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition"
+                  >
+                    Changer Email / Mot de passe
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 rounded-lg transition"
+                  >
+                    DÃ©connexion
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
               {/* Avatar + Info */}
               <div className="flex items-center gap-6 flex-1">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-pink-600 to-red-600 rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-lg"
+                  className="w-24 h-24 lg:w-32 lg:h-32 rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-lg overflow-hidden bg-gradient-to-br from-pink-600 to-red-600"
                 >
-                  <div className="w-12 h-12 lg:w-16 lg:h-16">{SvgIcon.User}</div>
+                  {profile?.avatar_url ? (
+                    <NextImage
+                      src={profile.avatar_url}
+                      alt={profile.display_name || profile.username || 'Profil'}
+                      width={128}
+                      height={128}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 lg:w-16 lg:h-16">{SvgIcon.User}</div>
+                  )}
                 </motion.div>
                 <div>
                   <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
-                    {profile?.full_name || user.email?.split('@')[0] || 'User'}
+                    {profile?.display_name || profile?.username || user.email?.split('@')[0] || 'User'}
                   </h1>
                   <div className="flex flex-col gap-2 text-gray-400">
                     <div className="flex items-center gap-2">
@@ -310,7 +401,7 @@ export default function Profile() {
                 onClick={handleLogout}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-6 py-3 bg-red-600/20 hover:bg-red-600/30 text-red-300 rounded-xl transition border border-red-600/50 font-semibold self-start lg:self-auto"
+                className="hidden md:flex items-center gap-2 px-6 py-3 bg-red-600/20 hover:bg-red-600/30 text-red-300 rounded-xl transition border border-red-600/50 font-semibold self-start lg:self-auto"
               >
                 <div className="w-5 h-5">{SvgIcon.LogOut}</div>
                 Sign Out
@@ -338,7 +429,7 @@ export default function Profile() {
           </AnimatePresence>
 
           {/* Navigation Tabs */}
-          <div className="flex gap-2 border-b border-white/10 overflow-x-auto">
+          <div className="flex gap-2 border-b border-white/10 overflow-x-auto text-xs md:text-sm">
             {(['overview', 'gallery', 'saved', 'settings'] as const).map((tab) => (
               <motion.button
                 key={tab}
@@ -402,12 +493,22 @@ export default function Profile() {
                   {isEditMode ? (
                     <div className="space-y-6">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-3">Full Name</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-3">Display Name</label>
                         <input
                           type="text"
-                          value={editForm.full_name}
-                          onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                          placeholder="John Doe"
+                          value={editForm.display_name}
+                          onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
+                          placeholder="Noverlie Cg"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-300 mb-3">Username</label>
+                        <input
+                          type="text"
+                          value={editForm.username}
+                          onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                          placeholder="noverliecg"
                           className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
                         />
                       </div>
@@ -422,12 +523,12 @@ export default function Profile() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-3">Phone</label>
+                        <label className="block text-sm font-semibold text-gray-300 mb-3">Avatar URL</label>
                         <input
-                          type="tel"
-                          value={editForm.phone}
-                          onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                          placeholder="+243 895 438 484"
+                          type="url"
+                          value={editForm.avatar_url}
+                          onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
+                          placeholder="https://..."
                           className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
                         />
                       </div>
@@ -458,19 +559,16 @@ export default function Profile() {
                           <p className="text-white font-medium text-sm">{user.email}</p>
                         </div>
                       </div>
-                      {profile?.full_name && (
+                      {profile?.display_name && (
                         <div className="bg-white/5 rounded-xl p-4">
-                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Full Name</p>
-                          <p className="text-white font-medium text-sm">{profile.full_name}</p>
+                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Display Name</p>
+                          <p className="text-white font-medium text-sm">{profile.display_name}</p>
                         </div>
                       )}
-                      {profile?.phone && (
+                      {profile?.username && (
                         <div className="bg-white/5 rounded-xl p-4">
-                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Phone</p>
-                          <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 text-pink-500">{SvgIcon.Phone}</div>
-                            <p className="text-white font-medium text-sm">{profile.phone}</p>
-                          </div>
+                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Username</p>
+                          <p className="text-white font-medium text-sm">@{profile.username}</p>
                         </div>
                       )}
                       <div className="bg-white/5 rounded-xl p-4">
@@ -586,6 +684,37 @@ export default function Profile() {
 
             {activeTab === 'settings' && (
               <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                      <div className="w-6 h-6">{SvgIcon.Mail}</div>
+                      Email
+                    </h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">New Email</label>
+                      <input
+                        type="email"
+                        value={emailForm.email}
+                        onChange={(e) => setEmailForm({ email: e.target.value })}
+                        placeholder="you@example.com"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
+                      />
+                    </div>
+                    {emailError && <p className="text-red-400 text-sm">{emailError}</p>}
+                    <motion.button
+                      onClick={handleEmailChange}
+                      disabled={isSaving}
+                      whileHover={{ scale: 1.02 }}
+                      className="px-6 py-3 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl font-semibold border border-pink-600/50 transition disabled:opacity-50"
+                    >
+                      Update Email
+                    </motion.button>
+                  </div>
+                </div>
+
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">

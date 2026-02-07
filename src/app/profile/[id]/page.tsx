@@ -10,9 +10,10 @@ import { createSupabaseClient } from '@/lib/supabase/client';
 
 interface UserProfile {
   id: string;
-  email: string;
   avatar_url?: string;
   display_name?: string;
+  username?: string;
+  bio?: string;
 }
 
 interface Photo {
@@ -31,6 +32,9 @@ export default function ModelProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowedBy, setIsFollowedBy] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -41,7 +45,7 @@ export default function ModelProfile() {
         // Load profile from profiles table
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, email, avatar_url, display_name')
+          .select('id, avatar_url, display_name, username, bio')
           .eq('id', userId)
           .single();
 
@@ -72,6 +76,36 @@ export default function ModelProfile() {
 
     loadProfile();
   }, [userId]);
+
+  useEffect(() => {
+    const supabase = createSupabaseClient();
+    const loadFollowState = async () => {
+      const { data } = await supabase.auth.getSession();
+      const viewerId = data.session?.user?.id || null;
+      setCurrentUserId(viewerId);
+      if (!viewerId || viewerId === userId) return;
+
+      const [followRes, followerRes] = await Promise.all([
+        supabase.from('follows').select('follower_id').eq('follower_id', viewerId).eq('following_id', userId).single(),
+        supabase.from('follows').select('follower_id').eq('follower_id', userId).eq('following_id', viewerId).single(),
+      ]);
+      setIsFollowing(Boolean(followRes.data));
+      setIsFollowedBy(Boolean(followerRes.data));
+    };
+    loadFollowState();
+  }, [userId]);
+
+  const toggleFollow = async () => {
+    if (!currentUserId || currentUserId === userId) return;
+    const supabase = createSupabaseClient();
+    if (isFollowing) {
+      await supabase.from('follows').delete().eq('follower_id', currentUserId).eq('following_id', userId);
+      setIsFollowing(false);
+      return;
+    }
+    await supabase.from('follows').insert({ follower_id: currentUserId, following_id: userId });
+    setIsFollowing(true);
+  };
 
   if (loading) {
     return (
@@ -104,7 +138,7 @@ export default function ModelProfile() {
             <ArrowLeft size={24} />
           </button>
           <h1 className="text-xl font-bold text-white">
-            {profile.display_name || profile.email.split('@')[0]}
+            {profile.display_name || profile.username || 'Profil'}
           </h1>
         </div>
       </div>
@@ -117,17 +151,35 @@ export default function ModelProfile() {
             {profile.avatar_url && (
               <Image
                 src={profile.avatar_url}
-                alt={profile.display_name || profile.email}
+                alt={profile.display_name || profile.username || 'Profil'}
                 width={128}
                 height={128}
                 className="w-32 h-32 rounded-full object-cover mb-4 border-2 border-pink-500"
               />
             )}
             <h2 className="text-2xl font-bold text-white">
-              {profile.display_name || profile.email.split('@')[0]}
+              {profile.display_name || profile.username || 'Profil'}
             </h2>
-            <p className="text-gray-400 text-sm mt-1">{profile.email}</p>
+            {profile.username && <p className="text-gray-400 text-sm mt-1">@{profile.username}</p>}
+            {profile.bio && <p className="text-gray-400 text-sm mt-3 max-w-xs text-center">{profile.bio}</p>}
             <p className="text-gray-500 text-sm mt-4">{photos.length} photos</p>
+            {currentUserId && currentUserId !== userId && (
+              <div className="mt-4 flex flex-col items-center gap-2">
+                <button
+                  onClick={toggleFollow}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+                    isFollowing
+                      ? 'bg-white/10 text-white border border-white/20'
+                      : 'bg-pink-500 text-white hover:bg-pink-600'
+                  }`}
+                >
+                  {isFollowing ? 'Suivi' : 'Suivre'}
+                </button>
+                {isFollowing && isFollowedBy && (
+                  <span className="text-xs text-green-400">Ami confirmé</span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Stats */}
