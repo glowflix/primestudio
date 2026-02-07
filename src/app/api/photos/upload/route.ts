@@ -101,9 +101,12 @@ export async function POST(req: Request) {
         cloudinary_public_id: upload.public_id,
       });
     } catch (cloudinaryError) {
-      console.error('🔴 Cloudinary error:', cloudinaryError);
+      const errorMsg = cloudinaryError instanceof Error 
+        ? cloudinaryError.message 
+        : JSON.stringify(cloudinaryError, null, 2);
+      console.error('🔴 Cloudinary error details:', errorMsg);
       return NextResponse.json(
-        { error: `Cloudinary: ${cloudinaryError instanceof Error ? cloudinaryError.message : String(cloudinaryError)}` },
+        { error: `Cloudinary: ${errorMsg}` },
         { status: 500 }
       );
     }
