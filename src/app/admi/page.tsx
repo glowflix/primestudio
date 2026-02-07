@@ -102,13 +102,26 @@ export default function AdminPage() {
         body: fd,
       });
 
-      const result = await res.json();
+      console.log('📨 Response status:', res.status);
+
+      let result;
+      try {
+        result = await res.json();
+      } catch (e) {
+        console.error('❌ Failed to parse JSON:', e);
+        const text = await res.text();
+        console.error('📄 Response text:', text);
+        setMessage({ type: 'error', text: 'Erreur serveur: réponse invalide' });
+        setUploading(false);
+        return;
+      }
 
       console.log('📨 Response:', { status: res.status, result });
 
       if (!res.ok) {
         setMessage({ type: 'error', text: result.error || 'Erreur lors du upload' });
         console.error('❌ Upload error:', result.error);
+        setUploading(false);
         return;
       }
 
