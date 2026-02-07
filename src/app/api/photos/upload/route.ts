@@ -10,11 +10,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-// Use SERVICE ROLE KEY for server-side operations (bypasses RLS)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const getSupabase = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+};
 
 export async function POST(req: Request) {
   try {
@@ -56,6 +57,11 @@ export async function POST(req: Request) {
     const dataUri = `data:${file.type};base64,${base64}`;
 
     console.log('✅ File converted to base64, dataUri length:', dataUri.length);
+
+    const supabase = getSupabase();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase key missing' }, { status: 500 });
+    }
 
     // Upload to Cloudinary
     console.log('☁️ Starting Cloudinary upload...');
