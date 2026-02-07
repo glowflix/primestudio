@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
-import ImageModal from '@/components/ImageModal';
-import PhotoViewer from '@/components/PhotoViewer';
+import InstagramModal from '@/components/InstagramModal';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 
@@ -77,7 +76,6 @@ export default function Store() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-  const [selectedPhotoViewer, setSelectedPhotoViewer] = useState<{ id: string; src: string; title: string; category: string; description: string } | null>(null);
   const [localUser, setLocalUser] = useState<{ id: string } | null>(null);
   const [supabasePhotos, setSupabasePhotos] = useState<Array<{ id: string; src: string; title: string; category: string; description: string }>>([]);
 
@@ -123,11 +121,9 @@ export default function Store() {
     loadPhotos();
   }, []);
 
-  // Combine static gallery with Supabase photos
-  const allImages = [...galleryImages, ...supabasePhotos];
-  const imagesList = allImages.map((img) => img.src);
-
+  // Combine static gallery with Supabase photos and filter
   const filteredImages = useMemo(() => {
+    const allImages = [...galleryImages, ...supabasePhotos];
     return allImages.filter((image) => {
       const matchCategory = selectedCategory === 'all' || image.category === selectedCategory;
       const matchSearch =
@@ -225,13 +221,12 @@ export default function Store() {
                 animate="visible"
                 key={selectedCategory + searchTerm}
               >
-                {filteredImages.map((image) => {
-                  // const globalIndex = galleryImages.findIndex((img) => img.id === image.id);
+                {filteredImages.map((image, index) => {
                   return (
                     <motion.button
                       key={image.id}
                       variants={itemVariants}
-                      onClick={() => setSelectedPhotoViewer(image)}
+                      onClick={() => setSelectedImageIndex(index)}
                       className="cursor-pointer group relative overflow-hidden rounded-md md:rounded-xl aspect-square"
                     >
                       <div className="relative w-full h-full">
@@ -275,27 +270,15 @@ export default function Store() {
         </div>
       </section>
 
-      {/* Image Modal */}
-      <ImageModal
+      {/* Instagram Modal */}
+      <InstagramModal
         isOpen={selectedImageIndex !== null}
-        images={imagesList}
+        photos={filteredImages}
         currentIndex={selectedImageIndex ?? 0}
         onClose={() => setSelectedImageIndex(null)}
         onIndexChange={(index) => setSelectedImageIndex(index)}
+        userId={localUser?.id || null}
       />
-
-      {/* Photo Viewer (Instagram-like) */}
-      {selectedPhotoViewer && (
-        <PhotoViewer
-          photoId={selectedPhotoViewer.id}
-          imageUrl={selectedPhotoViewer.src}
-          title={selectedPhotoViewer.title}
-          modelName={selectedPhotoViewer.title}
-          category={selectedPhotoViewer.category}
-          userId={localUser?.id || null}
-          onClose={() => setSelectedPhotoViewer(null)}
-        />
-      )}
 
       {/* CTA Section - Hidden on mobile */}
       <section className="hidden md:block py-16 bg-gradient-to-r from-pink-950/30 to-red-950/30">
