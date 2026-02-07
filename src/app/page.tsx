@@ -59,7 +59,7 @@ export default function Home() {
 
         if (data && data.length > 0) {
           // Combiner: Supabase en premier, puis images locales
-          const supabaseUrls = data.map((p) => p.image_url);
+          const supabaseUrls = data.map((p: { image_url: string }) => p.image_url);
           const mergedImages = [...supabaseUrls, ...localGalleryImages];
           setCarouselImages(mergedImages);
         } else {
