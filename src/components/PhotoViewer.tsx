@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, MessageCircle, X, Share2, MoreHorizontal, CheckCircle } from 'lucide-react';
 import OptimizedImage from './OptimizedImage';
@@ -196,7 +196,7 @@ export default function PhotoViewer({
 
               {/* Like Count */}
               <div className="text-sm font-medium text-white">
-                <span className="text-pink-500 font-bold">{likeCount}</span> j'aime
+                <span className="text-pink-500 font-bold">{likeCount}</span> j&apos;aime
               </div>
 
               {/* Comment Input */}

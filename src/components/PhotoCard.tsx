@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, X } from 'lucide-react';
+import { Heart, MessageCircle } from 'lucide-react';
 import OptimizedImage from './OptimizedImage';
 import { useLikes } from '@/hooks/useLikes';
 import { useComments } from '@/hooks/useComments';
