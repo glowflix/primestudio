@@ -16,49 +16,49 @@ const supabase = createClient(
 
 const galleryImages = [
   {
-    id: 1,
+    id: '1',
     src: '/images/267A1009.webp',
     title: 'Séance Portrait',
     category: 'portrait',
     description: 'Portrait professionnel en studio',
   },
   {
-    id: 2,
+    id: '2',
     src: '/images/267A1031.webp',
     title: 'Shooting Mode',
     category: 'fashion',
     description: 'Séance photo mode et style',
   },
   {
-    id: 3,
+    id: '3',
     src: '/images/267A1086.webp',
     title: 'Branding Personnel',
     category: 'branding',
     description: 'Photos de branding personnel',
   },
   {
-    id: 4,
+    id: '4',
     src: '/images/267A1088.webp',
     title: 'Portrait Créatif',
     category: 'portrait',
     description: 'Portrait avec effets créatifs',
   },
   {
-    id: 5,
+    id: '5',
     src: '/images/267A1011.webp',
     title: 'Contenu Social',
     category: 'social',
     description: 'Photos pour réseaux sociaux',
   },
   {
-    id: 6,
+    id: '6',
     src: '/images/canon_eos_5d_mk3_160.webp',
     title: 'Évènement',
     category: 'event',
     description: 'Couverture d\'événement',
   },
   {
-    id: 7,
+    id: '7',
     src: '/images/canon_eos_5d_mk3_161.webp',
     title: 'Événement Spécial',
     category: 'event',
@@ -77,8 +77,8 @@ export default function Store() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-  const [selectedPhotoViewer, setSelectedPhotoViewer] = useState<any>(null);
-  const [localUser, setLocalUser] = useState<any>(null);
+  const [selectedPhotoViewer, setSelectedPhotoViewer] = useState<{ id: string; src: string; title: string; category: string; description: string } | null>(null);
+  const [localUser, setLocalUser] = useState<{ id: string } | null>(null);
 
   // Get user
   useEffect(() => {
@@ -120,9 +120,7 @@ export default function Store() {
     },
   };
 
-  const handleImageClick = useCallback((index: number) => {
-    setSelectedImageIndex(index);
-  }, []);
+
 
   return (
     <>
@@ -192,7 +190,7 @@ export default function Store() {
                 key={selectedCategory + searchTerm}
               >
                 {filteredImages.map((image) => {
-                  const globalIndex = galleryImages.findIndex((img) => img.id === image.id);
+                  // const globalIndex = galleryImages.findIndex((img) => img.id === image.id);
                   return (
                     <motion.button
                       key={image.id}
