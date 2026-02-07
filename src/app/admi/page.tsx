@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Upload, AlertCircle, CheckCircle } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type User } from '@supabase/supabase-js';
 import OptimizedImage from '@/components/OptimizedImage';
 
 const supabase = createClient(
@@ -21,7 +21,7 @@ type FormData = {
 
 export default function AdminPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -120,9 +120,10 @@ export default function AdminPage() {
       setFile(null);
       setPreview('');
       setFormData({ title: '', category: 'portrait', model_name: '', isPublic: true });
-    } catch (err: any) {
-      console.error('❌ Upload exception:', err);
-      setMessage({ type: 'error', text: err.message || 'Erreur serveur' });
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Erreur serveur';
+      console.error('❌ Upload exception:', error);
+      setMessage({ type: 'error', text: error });
     } finally {
       setUploading(false);
     }
@@ -147,7 +148,7 @@ export default function AdminPage() {
           >
             <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
             <h1 className="text-2xl font-bold text-white mb-2">Accès Refusé</h1>
-            <p className="text-gray-400">Vous n'avez pas les permissions admin.</p>
+            <p className="text-gray-400">Vous n&apos;avez pas les permissions admin.</p>
           </motion.div>
         </div>
       </div>
@@ -242,7 +243,7 @@ export default function AdminPage() {
               <label className="block text-white font-medium">Catégorie</label>
               <select
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value as 'portrait' | 'event' | 'urban' })}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-pink-500"
               >
                 <option value="portrait">Portrait</option>

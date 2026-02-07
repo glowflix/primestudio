@@ -29,6 +29,7 @@ export function useComments(photoId: string) {
 
   useEffect(() => {
     fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photoId]);
 
   const addComment = async (userId: string, content: string) => {

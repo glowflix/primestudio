@@ -23,10 +23,11 @@ export async function POST(req: Request) {
     if (error) throw error;
 
     return NextResponse.json({ ok: true, data });
-  } catch (e: any) {
-    console.error('Comment error:', e);
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Server error';
+    console.error('Comment error:', error);
     return NextResponse.json(
-      { error: e.message || 'Server error' },
+      { error },
       { status: 500 }
     );
   }
@@ -50,10 +51,11 @@ export async function GET(req: Request) {
     if (error) throw error;
 
     return NextResponse.json({ comments: data || [] });
-  } catch (e: any) {
-    console.error('Get comments error:', e);
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Server error';
+    console.error('Get comments error:', error);
     return NextResponse.json(
-      { error: e.message || 'Server error' },
+      { error },
       { status: 500 }
     );
   }
@@ -86,10 +88,11 @@ export async function DELETE(req: Request) {
     if (error) throw error;
 
     return NextResponse.json({ ok: true });
-  } catch (e: any) {
-    console.error('Delete comment error:', e);
+  } catch (e) {
+    const error = e instanceof Error ? e.message : 'Server error';
+    console.error('Delete comment error:', error);
     return NextResponse.json(
-      { error: e.message || 'Server error' },
+      { error },
       { status: 500 }
     );
   }

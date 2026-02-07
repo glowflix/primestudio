@@ -24,6 +24,7 @@ export function useLikes(photoId: string, userId: string | null) {
 
   useEffect(() => {
     fetchLikes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photoId, userId]);
 
   const toggleLike = async () => {
