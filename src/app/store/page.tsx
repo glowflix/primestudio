@@ -107,7 +107,7 @@ export default function Store() {
         }
 
         // Convert Supabase photos to gallery format
-        const supabasePhotos = (data || []).map((photo: any) => ({
+        const supabasePhotos = (data || []).map((photo: Record<string, any>) => ({
           id: photo.id,
           src: photo.image_url,
           title: photo.title || 'Sans titre',
