@@ -73,6 +73,39 @@ export default function Profile() {
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [passwordError, setPasswordError] = useState('');
 
+
+  // --- Déclaration des callbacks avant le useEffect ---
+  const loadProfile = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
+    try {
+      const { data, error: err } = await client.from('user_profiles').select('*').eq('id', userId).single();
+      if (err && err.code !== 'PGRST116') throw err;
+      if (data) {
+        setProfile(data);
+        setEditForm({
+          full_name: data.full_name || '',
+          bio: data.bio || '',
+          phone: data.phone || '',
+        });
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+    }
+  }, []);
+
+  const loadPhotos = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
+    try {
+      const { data, error: err } = await client
+        .from('user_photos')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (err) throw err;
+      setPhotos(data || []);
+    } catch (err) {
+      console.error('Error loading photos:', err);
+    }
+  }, []);
+
   // Initialize
   useEffect(() => {
     let mounted = true;
@@ -113,38 +146,7 @@ export default function Profile() {
 
     initAuth();
     return () => { mounted = false; };
-  }, [router]);
-
-  const loadProfile = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
-    try {
-      const { data, error: err } = await client.from('user_profiles').select('*').eq('id', userId).single();
-      if (err && err.code !== 'PGRST116') throw err;
-      if (data) {
-        setProfile(data);
-        setEditForm({
-          full_name: data.full_name || '',
-          bio: data.bio || '',
-          phone: data.phone || '',
-        });
-      }
-    } catch (err) {
-      console.error('Error loading profile:', err);
-    }
-  }, []);
-
-  const loadPhotos = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
-    try {
-      const { data, error: err } = await client
-        .from('user_photos')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-      if (err) throw err;
-      setPhotos(data || []);
-    } catch (err) {
-      console.error('Error loading photos:', err);
-    }
-  }, []);
+  }, [router, loadProfile, loadPhotos]);
 
   const handleLogout = async () => {
     if (!supabase) return;

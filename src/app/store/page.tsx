@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Search } from 'lucide-react';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import ImageModal from '@/components/ImageModal';
 import PhotoViewer from '@/components/PhotoViewer';
 import Image from 'next/image';
