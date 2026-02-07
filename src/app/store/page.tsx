@@ -79,6 +79,8 @@ export default function Store() {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedPhotoViewer, setSelectedPhotoViewer] = useState<{ id: string; src: string; title: string; category: string; description: string } | null>(null);
   const [localUser, setLocalUser] = useState<{ id: string } | null>(null);
+  const [allImages, setAllImages] = useState(galleryImages);
+  const [loading, setLoading] = useState(true);
 
   // Get user
   useEffect(() => {
@@ -89,17 +91,54 @@ export default function Store() {
     getUser();
   }, []);
 
-  const imagesList = galleryImages.map((img) => img.src);
+  // Load photos from Supabase
+  useEffect(() => {
+    const loadPhotos = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('photos')
+          .select('*')
+          .eq('active', true);
+
+        if (error) {
+          console.error('Error loading photos:', error);
+          setLoading(false);
+          return;
+        }
+
+        // Convert Supabase photos to gallery format
+        const supabasePhotos = (data || []).map((photo: any) => ({
+          id: photo.id,
+          src: photo.image_url,
+          title: photo.title || 'Sans titre',
+          category: photo.category || 'portrait',
+          description: photo.model_name ? `Modèle: ${photo.model_name}` : 'Photo de prime-studio',
+        }));
+
+        // Combine with static gallery images
+        setAllImages([...galleryImages, ...supabasePhotos]);
+        console.log('✅ Photos chargées:', supabasePhotos.length);
+      } catch (err) {
+        console.error('Failed to load photos:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPhotos();
+  }, []);
+
+  const imagesList = allImages.map((img) => img.src);
 
   const filteredImages = useMemo(() => {
-    return galleryImages.filter((image) => {
+    return allImages.filter((image) => {
       const matchCategory = selectedCategory === 'all' || image.category === selectedCategory;
       const matchSearch =
         image.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         image.description.toLowerCase().includes(searchTerm.toLowerCase());
       return matchCategory && matchSearch;
     });
-  }, [selectedCategory, searchTerm]);
+  }, [selectedCategory, searchTerm, allImages]);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
