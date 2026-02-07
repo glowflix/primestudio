@@ -76,6 +76,56 @@ export default function AdminPage() {
     reader.readAsDataURL(f);
   };
 
+  // Compresse l'image avant upload pour éviter l'erreur 413
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Réduit la taille si trop grande
+          const maxWidth = 2000;
+          const maxHeight = 2000;
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width *= ratio;
+            height *= ratio;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Cannot get canvas context'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convertit en blob avec compression JPEG
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+              } else {
+                reject(new Error('Failed to compress image'));
+              }
+            },
+            'image/jpeg',
+            0.8 // 80% de qualité
+          );
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !user) {
@@ -87,8 +137,13 @@ export default function AdminPage() {
     setMessage(null);
 
     try {
+      // Compresse l'image avant upload
+      console.log('🖼️ Compressing image...');
+      const compressedFile = await compressImage(file);
+      console.log(`📦 Original: ${file.size / 1024}KB → Compressed: ${compressedFile.size / 1024}KB`);
+
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', compressedFile);
       fd.append('title', formData.title);
       fd.append('category', formData.category);
       fd.append('model_name', formData.model_name);
@@ -104,14 +159,16 @@ export default function AdminPage() {
 
       console.log('📨 Response status:', res.status);
 
+      // Lire le body une seule fois
+      const responseText = await res.text();
+      console.log('📄 Response text:', responseText.substring(0, 200));
+
       let result;
       try {
-        result = await res.json();
+        result = JSON.parse(responseText);
       } catch (e) {
-        console.error('❌ Failed to parse JSON:', e);
-        const text = await res.text();
-        console.error('📄 Response text:', text);
-        setMessage({ type: 'error', text: 'Erreur serveur: réponse invalide' });
+        console.error('❌ Failed to parse JSON:', e, responseText);
+        setMessage({ type: 'error', text: `Erreur serveur: ${responseText.substring(0, 100)}` });
         setUploading(false);
         return;
       }
