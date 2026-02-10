@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import Navigation from "@/components/Navigation";
 import BottomNavigation from "@/components/BottomNavigation";
+import SplashScreen from "@/components/SplashScreen";
+import PageTransition from "@/components/PageTransition";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -34,6 +36,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: "#000000",
 };
 
@@ -55,10 +59,13 @@ export default function RootLayout({
         <meta name="referrer" content="strict-origin-when-cross-origin" />
       </head>
       <body className="bg-black text-white">
+        <SplashScreen />
         <Navigation />
         <BottomNavigation />
         <main className="pt-0 md:pt-20">
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
 
         {/* Footer */}

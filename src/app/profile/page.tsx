@@ -8,22 +8,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import NextImage from 'next/image';
 
-// Professional SVG Icons
-const SvgIcon = {
-  User: <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" /></svg>,
-  LogOut: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>,
-  Edit: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" /></svg>,
-  Check: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>,
-  X: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
-  Mail: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>,
-  Phone: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" /></svg>,
-  Gallery: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>,
-  Settings: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6m-15.78 7.78l4.24-4.24m2.12-2.12l4.24-4.24" /></svg>,
-  Lock: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>,
-  AlertCircle: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>,
-  Loader: <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" opacity="0.3" /><path d="M12 2a10 10 0 0 1 10 10" /></svg>,
-};
-
 type UserProfile = {
   id: string;
   username?: string;
@@ -52,7 +36,7 @@ type SavedPhoto = {
   created_at?: string;
 };
 
-type TabType = 'overview' | 'gallery' | 'saved' | 'settings';
+type TabType = 'gallery' | 'saved';
 
 export default function Profile() {
   const router = useRouter();
@@ -62,34 +46,39 @@ export default function Profile() {
   const [savedPhotos, setSavedPhotos] = useState<SavedPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('gallery');
   const [supabase, setSupabase] = useState<ReturnType<typeof createSupabaseClient> | null>(null);
 
-  // Pagination
-  const GALLERY_PAGE_SIZE = 12;
-  const [galleryPage, setGalleryPage] = useState(1);
-  const visiblePhotos = photos.slice(0, galleryPage * GALLERY_PAGE_SIZE);
-  const visibleSaved = savedPhotos.slice(0, galleryPage * GALLERY_PAGE_SIZE);
+  // Hamburger menu
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Edit Mode
   const [isEditMode, setIsEditMode] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: '', username: '', bio: '', avatar_url: '' });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Password
+  // Password & Email
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [passwordError, setPasswordError] = useState('');
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailForm, setEmailForm] = useState({ email: '' });
   const [emailError, setEmailError] = useState('');
 
+  // Pagination
+  const PAGE_SIZE = 12;
+  const [galleryPage, setGalleryPage] = useState(1);
+  const visiblePhotos = photos.slice(0, galleryPage * PAGE_SIZE);
+  const visibleSaved = savedPhotos.slice(0, galleryPage * PAGE_SIZE);
 
-  // --- Déclaration des callbacks avant le useEffect ---
+  // Mock follow stats (replace with real data when backend ready)
+  const followersCount = 0;
+  const followingCount = 0;
+
   const loadProfile = useCallback(async (client: ReturnType<typeof createSupabaseClient>, userId: string) => {
     try {
-      const { data, error: err } = await client.from('profiles').select('*').eq('id', userId).single();
-      if (err && err.code !== 'PGRST116') throw err;
+      const { data, error: err } = await client.from('profiles').select('*').eq('id', userId).maybeSingle();
+      if (err) throw err;
       if (data) {
         setProfile(data);
         setEditForm({
@@ -108,7 +97,7 @@ export default function Profile() {
     try {
       const { data, error: err } = await client
         .from('photos')
-        .select('id, user_id, image_url, title, description, created_at')
+        .select('id, user_id, image_url, title, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
       if (err) throw err;
@@ -125,8 +114,14 @@ export default function Profile() {
         .select('photos(id, image_url, title, created_at)')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
-      if (err) throw err;
-
+      if (err) {
+        // Table might not exist yet
+        if (err.code === 'PGRST205' || err.code === '42P01') {
+          setSavedPhotos([]);
+          return;
+        }
+        throw err;
+      }
       const mapped = (data || [])
         .map((row: { photos: SavedPhoto | null }) => row.photos)
         .filter((photo: SavedPhoto | null): photo is SavedPhoto => Boolean(photo));
@@ -136,56 +131,42 @@ export default function Profile() {
     }
   }, []);
 
-  // Initialize
   useEffect(() => {
     let mounted = true;
     let client: ReturnType<typeof createSupabaseClient> | null = null;
-
     try {
       client = createSupabaseClient();
       setSupabase(client);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Supabase configuration error';
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Supabase configuration error');
       setIsLoading(false);
       return;
     }
-
     const initAuth = async () => {
       try {
         const { data } = await client!.auth.getSession();
         if (!mounted) return;
-
         if (!data.session?.user) {
           router.push('/auth');
           return;
         }
-
         setUser(data.session.user);
         await loadProfile(client!, data.session.user.id);
         await loadPhotos(client!, data.session.user.id);
         await loadSavedPhotos(client!, data.session.user.id);
         setIsLoading(false);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Error loading session';
+        if (!mounted) return;
+        if (err instanceof Error && err.name === 'AbortError') return;
         if (mounted) {
-          setError(errorMessage);
+          setError(err instanceof Error ? err.message : 'Error loading session');
           setIsLoading(false);
         }
       }
     };
-
     initAuth();
     return () => { mounted = false; };
   }, [router, loadProfile, loadPhotos, loadSavedPhotos]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const tab = new URLSearchParams(window.location.search).get('tab') as TabType | null;
-    if (tab && ['overview', 'gallery', 'saved', 'settings'].includes(tab)) {
-      setActiveTab(tab);
-    }
-  }, []);
 
   const handleLogout = async () => {
     if (!supabase) return;
@@ -207,10 +188,10 @@ export default function Profile() {
       if (err) throw err;
       setProfile({ ...(profile || { id: user.id }), ...editForm });
       setIsEditMode(false);
-      setError('✅ Profile updated successfully');
+      setError('✅ Profil mis à jour avec succès');
       setTimeout(() => setError(''), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error saving profile');
+      setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
     } finally {
       setIsSaving(false);
     }
@@ -219,15 +200,15 @@ export default function Profile() {
   const handlePasswordChange = async () => {
     setPasswordError('');
     if (!passwordForm.new || !passwordForm.confirm) {
-      setPasswordError('Please fill all fields');
+      setPasswordError('Veuillez remplir tous les champs');
       return;
     }
     if (passwordForm.new !== passwordForm.confirm) {
-      setPasswordError('Passwords do not match');
+      setPasswordError('Les mots de passe ne correspondent pas');
       return;
     }
     if (passwordForm.new.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
     if (!supabase) return;
@@ -237,10 +218,10 @@ export default function Profile() {
       if (err) throw err;
       setPasswordForm({ current: '', new: '', confirm: '' });
       setShowPasswordForm(false);
-      setError('✅ Password updated successfully');
+      setError('✅ Mot de passe mis à jour');
       setTimeout(() => setError(''), 3000);
     } catch (err) {
-      setPasswordError(err instanceof Error ? err.message : 'Error updating password');
+      setPasswordError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour');
     } finally {
       setIsSaving(false);
     }
@@ -249,7 +230,7 @@ export default function Profile() {
   const handleEmailChange = async () => {
     setEmailError('');
     if (!emailForm.email) {
-      setEmailError('Please enter your new email');
+      setEmailError('Veuillez entrer votre nouvel email');
       return;
     }
     if (!supabase) return;
@@ -257,529 +238,543 @@ export default function Profile() {
     try {
       const { error: err } = await supabase.auth.updateUser({ email: emailForm.email });
       if (err) throw err;
-      setError('âœ… Email update sent. Check your inbox to confirm.');
+      setShowEmailForm(false);
+      setError('✅ Email envoyé. Vérifiez votre boîte mail.');
       setTimeout(() => setError(''), 3000);
     } catch (err) {
-      setEmailError(err instanceof Error ? err.message : 'Error updating email');
+      setEmailError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour');
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-pink-950/20 to-black flex items-center justify-center pt-20">
-        <div className="text-pink-500">{SvgIcon.Loader}</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-pink-950/20 to-black pt-32 pb-20 px-4">
-        <div className="max-w-md mx-auto text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-            <div className="w-20 h-20 mx-auto text-pink-500">{SvgIcon.User}</div>
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Profile</h1>
-              <p className="text-gray-400 text-lg">Sign in to continue</p>
-            </div>
-            <Link href="/auth">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full px-6 py-3 bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white font-semibold rounded-xl transition duration-300 shadow-lg hover:shadow-pink-500/30"
-              >
-                Sign In
-              </motion.button>
-            </Link>
-          </motion.div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 text-xs">Chargement...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-pink-950/20 to-black pt-20 pb-20 px-4">
-      <div className="max-w-6xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-          {/* Professional Header */}
-          <div className="bg-gradient-to-r from-white/5 to-white/5 border border-white/10 rounded-2xl p-8 lg:p-12 relative">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="md:hidden absolute top-4 right-4 w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center"
-              aria-label="Menu"
-            >
-              <div className="w-5 h-5 flex flex-col justify-center gap-1.5">
-                <span className="block h-0.5 w-full bg-white/80" />
-                <span className="block h-0.5 w-full bg-white/80" />
-                <span className="block h-0.5 w-full bg-white/80" />
-              </div>
+  // Not logged in
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-4">
+        <div className="text-center space-y-6 max-w-xs">
+          <div className="w-20 h-20 mx-auto rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+            <svg className="w-10 h-10 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white mb-1">Mon Profil</h1>
+            <p className="text-gray-500 text-sm">Connectez-vous pour accéder à votre profil</p>
+          </div>
+          <Link href="/auth">
+            <button className="w-full px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-xl transition text-sm">
+              Se connecter
             </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-            <AnimatePresence>
-              {showMobileMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  className="md:hidden absolute top-16 right-4 z-20 w-52 rounded-xl border border-white/10 bg-black/90 backdrop-blur-md p-2 space-y-1"
-                >
-                  <button
-                    onClick={() => {
-                      setShowMobileMenu(false);
-                      router.push('/messages');
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition"
-                  >
-                    Messager
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowMobileMenu(false);
-                      setActiveTab('overview');
-                      setIsEditMode(true);
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition"
-                  >
-                    Modifier Profil
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowMobileMenu(false);
-                      setActiveTab('settings');
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition"
-                  >
-                    Changer Email / Mot de passe
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-3 py-2 text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 rounded-lg transition"
-                  >
-                    DÃ©connexion
-                  </button>
-                </motion.div>
+  const displayName = profile?.display_name || profile?.username || user.email?.split('@')[0] || 'Utilisateur';
+
+  return (
+    <div className="min-h-screen bg-black pb-20 md:pb-8">
+      {/* ===== MOBILE HEADER WITH HAMBURGER MENU ===== */}
+      <div className="md:hidden sticky top-0 z-40 bg-black/95 backdrop-blur-sm border-b border-white/5">
+        <div className="flex items-center justify-between px-4 h-11">
+          <h1 className="text-sm font-bold text-white truncate max-w-[200px]">
+            {profile?.username ? `@${profile.username}` : displayName}
+          </h1>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-1.5 text-white/70 hover:text-white transition"
+            aria-label="Menu"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {menuOpen ? (
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </>
               )}
-            </AnimatePresence>
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-              {/* Avatar + Info */}
-              <div className="flex items-center gap-6 flex-1">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="w-24 h-24 lg:w-32 lg:h-32 rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-lg overflow-hidden bg-gradient-to-br from-pink-600 to-red-600"
-                >
-                  {profile?.avatar_url ? (
-                    <NextImage
-                      src={profile.avatar_url}
-                      alt={profile.display_name || profile.username || 'Profil'}
-                      width={128}
-                      height={128}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 lg:w-16 lg:h-16">{SvgIcon.User}</div>
-                  )}
-                </motion.div>
-                <div>
-                  <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
-                    {profile?.display_name || profile?.username || user.email?.split('@')[0] || 'User'}
-                  </h1>
-                  <div className="flex flex-col gap-2 text-gray-400">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4">{SvgIcon.Mail}</div>
-                      <span className="text-sm">{user.email}</span>
-                    </div>
-                    <p className="text-sm">Member since {new Date(user.created_at || '').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</p>
-                  </div>
-                </div>
-              </div>
+            </svg>
+          </button>
+        </div>
 
-              {/* Logout Button */}
-              <motion.button
-                onClick={handleLogout}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="hidden md:flex items-center gap-2 px-6 py-3 bg-red-600/20 hover:bg-red-600/30 text-red-300 rounded-xl transition border border-red-600/50 font-semibold self-start lg:self-auto"
-              >
-                <div className="w-5 h-5">{SvgIcon.LogOut}</div>
-                Sign Out
-              </motion.button>
+        {/* Dropdown menu */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden border-t border-white/5"
+            >
+              <div className="py-1 px-2">
+                {[
+                  { label: 'Messages', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', action: () => { router.push('/messages'); setMenuOpen(false); } },
+                  { label: 'Modifier le profil', icon: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z', action: () => { setIsEditMode(true); setMenuOpen(false); } },
+                  { label: 'Changer l\'email', icon: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm16 2l-8 5-8-5', action: () => { setShowEmailForm(true); setMenuOpen(false); } },
+                  { label: 'Changer le mot de passe', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', action: () => { setShowPasswordForm(true); setMenuOpen(false); } },
+                  { label: 'Déconnexion', icon: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9', action: () => { handleLogout(); setMenuOpen(false); }, danger: true },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={item.action}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition ${
+                      'danger' in item && item.danger
+                        ? 'text-red-400 hover:bg-red-500/10'
+                        : 'text-gray-300 hover:bg-white/5'
+                    }`}
+                  >
+                    <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d={item.icon} />
+                    </svg>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Close menu overlay */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-30 md:hidden" onClick={() => setMenuOpen(false)} />
+      )}
+
+      {/* ===== ERROR / SUCCESS TOAST ===== */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`fixed top-14 md:top-24 left-4 right-4 z-50 max-w-md mx-auto rounded-xl px-4 py-3 text-sm font-medium shadow-lg ${
+              error.startsWith('✅')
+                ? 'bg-emerald-500/90 text-white'
+                : 'bg-red-500/90 text-white'
+            }`}
+          >
+            {error.replace('✅ ', '')}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== PROFILE HEADER ===== */}
+      <div className="max-w-lg mx-auto px-4 pt-6 md:pt-28">
+        {/* Avatar + Name + Stats */}
+        <div className="flex flex-col items-center">
+          {/* Avatar */}
+          <div className="relative mb-3">
+            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/10 bg-white/5">
+              {profile?.avatar_url ? (
+                <NextImage
+                  src={profile.avatar_url}
+                  alt={displayName}
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" />
+                  </svg>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Error Message */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className={`border rounded-xl p-4 flex gap-3 ${
-                  error.startsWith('✅')
-                    ? 'bg-green-600/20 border-green-600/50 text-green-300'
-                    : 'bg-red-600/20 border-red-600/50 text-red-300'
-                }`}
-              >
-                <div className="w-5 h-5 flex-shrink-0 mt-0.5">{error.startsWith('✅') ? SvgIcon.Check : SvgIcon.AlertCircle}</div>
-                <p className="text-sm font-medium">{error.replace('✅ ', '')}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Name */}
+          <h2 className="text-lg font-bold text-white">{displayName}</h2>
+          {profile?.username && (
+            <p className="text-gray-500 text-xs mt-0.5">@{profile.username}</p>
+          )}
 
-          {/* Navigation Tabs */}
-          <div className="flex gap-2 border-b border-white/10 overflow-x-auto text-xs md:text-sm">
-            {(['overview', 'gallery', 'saved', 'settings'] as const).map((tab) => (
-              <motion.button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-4 font-semibold transition whitespace-nowrap flex items-center gap-2 ${
-                  activeTab === tab
-                    ? 'border-b-2 border-pink-500 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {tab === 'overview' && (
-                  <>
-                    <div className="w-5 h-5">{SvgIcon.User}</div>
-                    <span className="hidden sm:inline">Overview</span>
-                  </>
-                )}
-                {tab === 'gallery' && (
-                  <>
-                    <div className="w-5 h-5">{SvgIcon.Gallery}</div>
-                    <span className="hidden sm:inline">Gallery</span>
-                    <span className="text-xs bg-pink-600/30 px-2 py-1 rounded-full">{photos.length}</span>
-                  </>
-                )}
-                {tab === 'saved' && (
-                  <>
-                    <div className="w-5 h-5">{SvgIcon.Gallery}</div>
-                    <span className="hidden sm:inline">Saved</span>
-                    <span className="text-xs bg-pink-600/30 px-2 py-1 rounded-full">{savedPhotos.length}</span>
-                  </>
-                )}
-                {tab === 'settings' && (
-                  <>
-                    <div className="w-5 h-5">{SvgIcon.Settings}</div>
-                    <span className="hidden sm:inline">Settings</span>
-                  </>
-                )}
-              </motion.button>
-            ))}
+          {/* Bio */}
+          {profile?.bio && (
+            <p className="text-gray-400 text-xs text-center mt-2 max-w-[260px] leading-relaxed">{profile.bio}</p>
+          )}
+
+          {/* Stats Row */}
+          <div className="flex items-center gap-8 mt-4">
+            <div className="text-center">
+              <p className="text-base font-bold text-white">{photos.length}</p>
+              <p className="text-[10px] text-gray-500">Publications</p>
+            </div>
+            <div className="text-center">
+              <p className="text-base font-bold text-white">{followersCount}</p>
+              <p className="text-[10px] text-gray-500">Abonnés</p>
+            </div>
+            <div className="text-center">
+              <p className="text-base font-bold text-white">{followingCount}</p>
+              <p className="text-[10px] text-gray-500">Abonnements</p>
+            </div>
           </div>
 
-          {/* Tab Content */}
-          <AnimatePresence mode="wait">
-            {activeTab === 'overview' && (
-              <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                {/* Profile Card */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-white">Profile Information</h2>
-                    {!isEditMode && (
-                      <motion.button
-                        onClick={() => setIsEditMode(true)}
-                        whileHover={{ scale: 1.05 }}
-                        className="flex items-center gap-2 px-4 py-2 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl transition font-semibold"
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 mt-4 w-full max-w-xs">
+            <button
+              onClick={() => setIsEditMode(true)}
+              className="flex-1 py-2 bg-white/10 hover:bg-white/15 text-white text-xs font-semibold rounded-lg transition"
+            >
+              Modifier le profil
+            </button>
+            <button
+              onClick={() => router.push('/messages')}
+              className="flex-1 py-2 bg-white/10 hover:bg-white/15 text-white text-xs font-semibold rounded-lg transition"
+            >
+              Message
+            </button>
+            {/* Desktop-only: settings + logout */}
+            <button
+              onClick={handleLogout}
+              className="hidden md:flex p-2 bg-white/10 hover:bg-white/15 text-white rounded-lg transition"
+              title="Déconnexion"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== EDIT PROFILE MODAL ===== */}
+      <AnimatePresence>
+        {isEditMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
+            onClick={() => setIsEditMode(false)}
+          >
+            <motion.div
+              initial={{ y: 100 }}
+              animate={{ y: 0 }}
+              exit={{ y: 100 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-t-2xl md:rounded-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-white">Modifier le profil</h3>
+                <button onClick={() => setIsEditMode(false)} className="text-gray-500 hover:text-white p-1">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              {[
+                { label: 'Nom affiché', key: 'display_name', type: 'text', placeholder: 'Votre nom' },
+                { label: "Nom d'utilisateur", key: 'username', type: 'text', placeholder: 'votre_pseudo' },
+                { label: 'Avatar URL', key: 'avatar_url', type: 'url', placeholder: 'https://...' },
+              ].map((field) => (
+                <div key={field.key}>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">{field.label}</label>
+                  <input
+                    type={field.type}
+                    value={editForm[field.key as keyof typeof editForm]}
+                    onChange={(e) => setEditForm({ ...editForm, [field.key]: e.target.value })}
+                    placeholder={field.placeholder}
+                    className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
+                  />
+                </div>
+              ))}
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Bio</label>
+                <textarea
+                  value={editForm.bio}
+                  onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                  placeholder="Parlez de vous..."
+                  rows={3}
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition resize-none"
+                />
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                  className="flex-1 py-2.5 bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+                >
+                  {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+                </button>
+                <button
+                  onClick={() => setIsEditMode(false)}
+                  className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-lg transition"
+                >
+                  Annuler
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== EMAIL CHANGE MODAL ===== */}
+      <AnimatePresence>
+        {showEmailForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowEmailForm(false)}
+          >
+            <motion.div
+              initial={{ y: 100 }}
+              animate={{ y: 0 }}
+              exit={{ y: 100 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-t-2xl md:rounded-2xl p-5 space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-white">Changer l&apos;email</h3>
+                <button onClick={() => setShowEmailForm(false)} className="text-gray-500 hover:text-white p-1">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Nouvel email</label>
+                <input
+                  type="email"
+                  value={emailForm.email}
+                  onChange={(e) => setEmailForm({ email: e.target.value })}
+                  placeholder="nouvel@email.com"
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
+                />
+                {emailError && <p className="text-red-400 text-xs mt-1">{emailError}</p>}
+              </div>
+              <button
+                onClick={handleEmailChange}
+                disabled={isSaving}
+                className="w-full py-2.5 bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+              >
+                {isSaving ? 'Mise à jour...' : 'Mettre à jour'}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== PASSWORD CHANGE MODAL ===== */}
+      <AnimatePresence>
+        {showPasswordForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowPasswordForm(false)}
+          >
+            <motion.div
+              initial={{ y: 100 }}
+              animate={{ y: 0 }}
+              exit={{ y: 100 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-t-2xl md:rounded-2xl p-5 space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-white">Changer le mot de passe</h3>
+                <button onClick={() => { setShowPasswordForm(false); setPasswordError(''); }} className="text-gray-500 hover:text-white p-1">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Nouveau mot de passe</label>
+                <input
+                  type="password"
+                  value={passwordForm.new}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                  placeholder="Nouveau mot de passe"
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Confirmer</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirm}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                  placeholder="Confirmer le mot de passe"
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
+                />
+                {passwordError && <p className="text-red-400 text-xs mt-1">{passwordError}</p>}
+              </div>
+              <button
+                onClick={handlePasswordChange}
+                disabled={isSaving}
+                className="w-full py-2.5 bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+              >
+                {isSaving ? 'Mise à jour...' : 'Mettre à jour'}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== TABS ===== */}
+      <div className="max-w-lg mx-auto mt-5">
+        <div className="flex border-b border-white/10">
+          {[
+            { id: 'gallery' as TabType, label: 'Publications', icon: 'M3 3h7v7H3V3zm11 0h7v7h-7V3zm0 11h7v7h-7v-7zm-11 0h7v7H3v-7z' },
+            { id: 'saved' as TabType, label: 'Enregistrés', icon: 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id); setGalleryPage(1); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition relative ${
+                activeTab === tab.id ? 'text-white' : 'text-gray-500'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d={tab.icon} />
+              </svg>
+              <span className="uppercase tracking-wider">{tab.label}</span>
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="profileTab"
+                  className="absolute bottom-0 left-0 right-0 h-px bg-white"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ===== TAB CONTENT ===== */}
+      <div className="max-w-lg mx-auto px-1">
+        <AnimatePresence mode="wait">
+          {activeTab === 'gallery' && (
+            <motion.div
+              key="gallery"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {visiblePhotos.length > 0 ? (
+                <div className="space-y-4 pt-1">
+                  <div className="grid grid-cols-3 gap-px">
+                    {visiblePhotos.map((photo, idx) => (
+                      <motion.div
+                        key={photo.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: idx * 0.03 }}
+                        className="relative aspect-square bg-white/5 overflow-hidden"
                       >
-                        <div className="w-4 h-4">{SvgIcon.Edit}</div>
-                        Edit
-                      </motion.button>
-                    )}
+                        <NextImage
+                          src={photo.image_url}
+                          alt={photo.title || `Photo ${idx + 1}`}
+                          fill
+                          className="object-cover hover:opacity-80 transition-opacity duration-200"
+                          sizes="33vw"
+                          quality={70}
+                          loading="lazy"
+                        />
+                      </motion.div>
+                    ))}
                   </div>
-
-                  {isEditMode ? (
-                    <div className="space-y-6">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-3">Display Name</label>
-                        <input
-                          type="text"
-                          value={editForm.display_name}
-                          onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
-                          placeholder="Noverlie Cg"
-                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-3">Username</label>
-                        <input
-                          type="text"
-                          value={editForm.username}
-                          onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                          placeholder="noverliecg"
-                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-3">Bio</label>
-                        <textarea
-                          value={editForm.bio}
-                          onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                          placeholder="Tell us about yourself..."
-                          rows={4}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition resize-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-3">Avatar URL</label>
-                        <input
-                          type="url"
-                          value={editForm.avatar_url}
-                          onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
-                          placeholder="https://..."
-                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
-                        />
-                      </div>
-                      <div className="flex gap-3 pt-4">
-                        <motion.button
-                          onClick={handleSaveProfile}
-                          disabled={isSaving}
-                          whileHover={{ scale: 1.02 }}
-                          className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white font-semibold rounded-xl transition disabled:opacity-50"
-                        >
-                          {isSaving ? 'Saving...' : 'Save Changes'}
-                        </motion.button>
-                        <motion.button
-                          onClick={() => setIsEditMode(false)}
-                          whileHover={{ scale: 1.02 }}
-                          className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition"
-                        >
-                          Cancel
-                        </motion.button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Email</p>
-                        <div className="flex items-center gap-3">
-                          <div className="w-5 h-5 text-pink-500">{SvgIcon.Mail}</div>
-                          <p className="text-white font-medium text-sm">{user.email}</p>
-                        </div>
-                      </div>
-                      {profile?.display_name && (
-                        <div className="bg-white/5 rounded-xl p-4">
-                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Display Name</p>
-                          <p className="text-white font-medium text-sm">{profile.display_name}</p>
-                        </div>
-                      )}
-                      {profile?.username && (
-                        <div className="bg-white/5 rounded-xl p-4">
-                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Username</p>
-                          <p className="text-white font-medium text-sm">@{profile.username}</p>
-                        </div>
-                      )}
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Member Since</p>
-                        <p className="text-white font-medium text-sm">{new Date(user.created_at || '').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                      </div>
-                    </div>
-                  )}
-                  {profile?.bio && !isEditMode && (
-                    <div className="pt-6 border-t border-white/10">
-                      <p className="text-xs font-semibold text-gray-400 uppercase mb-3">Bio</p>
-                      <p className="text-gray-300 leading-relaxed text-sm">{profile.bio}</p>
+                  {visiblePhotos.length < photos.length && (
+                    <div className="text-center pb-4">
+                      <button
+                        onClick={() => setGalleryPage(galleryPage + 1)}
+                        className="px-5 py-2 bg-white/5 hover:bg-white/10 text-gray-400 text-xs rounded-lg transition"
+                      >
+                        Voir plus
+                      </button>
                     </div>
                   )}
                 </div>
-              </motion.div>
-            )}
-
-            {activeTab === 'gallery' && (
-              <motion.div key="gallery" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                {visiblePhotos.length > 0 ? (
-                  <>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {visiblePhotos.map((photo, idx) => (
-                        <motion.div
-                          key={photo.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="group relative aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-pink-500/50 transition"
-                        >
-                          <NextImage
-                            src={photo.image_url}
-                            alt={photo.title || `Photo ${idx + 1}`}
-                            fill
-                            className="object-cover group-hover:scale-110 transition duration-300"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                            quality={70}
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition" />
-                        </motion.div>
-                      ))}
-                    </div>
-                    {visiblePhotos.length < photos.length && (
-                      <div className="text-center pt-6">
-                        <motion.button
-                          onClick={() => setGalleryPage(galleryPage + 1)}
-                          whileHover={{ scale: 1.02 }}
-                          className="px-6 py-3 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl font-semibold border border-pink-600/50 transition"
-                        >
-                          Load More ({visiblePhotos.length}/{photos.length})
-                        </motion.button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-16">
-                    <div className="w-16 h-16 mx-auto text-gray-500 mb-4">{SvgIcon.Gallery}</div>
-                    <p className="text-gray-400 text-lg">No photos yet</p>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {activeTab === 'saved' && (
-              <motion.div key="saved" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                {visibleSaved.length > 0 ? (
-                  <>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {visibleSaved.map((photo, idx) => (
-                        <motion.div
-                          key={photo.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="group relative aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 hover:border-pink-500/50 transition"
-                        >
-                          <NextImage
-                            src={photo.image_url}
-                            alt={photo.title || `Saved ${idx + 1}`}
-                            fill
-                            className="object-cover group-hover:scale-110 transition duration-300"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                            quality={70}
-                            loading="lazy"
-                          />
-                          <div className="absolute top-2 left-2 bg-pink-500/90 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                            Saved
-                          </div>
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition" />
-                        </motion.div>
-                      ))}
-                    </div>
-                    {visibleSaved.length < savedPhotos.length && (
-                      <div className="text-center pt-6">
-                        <motion.button
-                          onClick={() => setGalleryPage(galleryPage + 1)}
-                          whileHover={{ scale: 1.02 }}
-                          className="px-6 py-3 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl font-semibold border border-pink-600/50 transition"
-                        >
-                          Load More ({visibleSaved.length}/{savedPhotos.length})
-                        </motion.button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-16">
-                    <div className="w-16 h-16 mx-auto text-gray-500 mb-4">{SvgIcon.Gallery}</div>
-                    <p className="text-gray-400 text-lg">No saved photos yet</p>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {activeTab === 'settings' && (
-              <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                      <div className="w-6 h-6">{SvgIcon.Mail}</div>
-                      Email
-                    </h2>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">New Email</label>
-                      <input
-                        type="email"
-                        value={emailForm.email}
-                        onChange={(e) => setEmailForm({ email: e.target.value })}
-                        placeholder="you@example.com"
-                        className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-500/50 transition"
-                      />
-                    </div>
-                    {emailError && <p className="text-red-400 text-sm">{emailError}</p>}
-                    <motion.button
-                      onClick={handleEmailChange}
-                      disabled={isSaving}
-                      whileHover={{ scale: 1.02 }}
-                      className="px-6 py-3 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl font-semibold border border-pink-600/50 transition disabled:opacity-50"
-                    >
-                      Update Email
-                    </motion.button>
-                  </div>
+              ) : (
+                <div className="text-center py-16">
+                  <svg className="w-12 h-12 mx-auto text-gray-700 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  <p className="text-gray-500 text-sm">Aucune publication</p>
                 </div>
+              )}
+            </motion.div>
+          )}
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                      <div className="w-6 h-6">{SvgIcon.Lock}</div>
-                      Password
-                    </h2>
+          {activeTab === 'saved' && (
+            <motion.div
+              key="saved"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {visibleSaved.length > 0 ? (
+                <div className="space-y-4 pt-1">
+                  <div className="grid grid-cols-3 gap-px">
+                    {visibleSaved.map((photo, idx) => (
+                      <motion.div
+                        key={photo.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: idx * 0.03 }}
+                        className="relative aspect-square bg-white/5 overflow-hidden"
+                      >
+                        <NextImage
+                          src={photo.image_url}
+                          alt={photo.title || `Saved ${idx + 1}`}
+                          fill
+                          className="object-cover hover:opacity-80 transition-opacity duration-200"
+                          sizes="33vw"
+                          quality={70}
+                          loading="lazy"
+                        />
+                      </motion.div>
+                    ))}
                   </div>
-
-                  {!showPasswordForm ? (
-                    <motion.button
-                      onClick={() => setShowPasswordForm(true)}
-                      whileHover={{ scale: 1.02 }}
-                      className="px-6 py-3 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 rounded-xl font-semibold border border-pink-600/50 transition"
-                    >
-                      Change Password
-                    </motion.button>
-                  ) : (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">New Password</label>
-                        <input
-                          type="password"
-                          value={passwordForm.new}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white focus:outline-none focus:border-pink-500/50 transition"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">Confirm Password</label>
-                        <input
-                          type="password"
-                          value={passwordForm.confirm}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white focus:outline-none focus:border-pink-500/50 transition"
-                        />
-                      </div>
-                      {passwordError && (
-                        <div className="text-red-400 text-sm font-medium">{passwordError}</div>
-                      )}
-                      <div className="flex gap-3 pt-4">
-                        <motion.button
-                          onClick={handlePasswordChange}
-                          disabled={isSaving}
-                          className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-600 to-red-600 text-white font-semibold rounded-xl transition disabled:opacity-50"
-                        >
-                          {isSaving ? 'Updating...' : 'Update Password'}
-                        </motion.button>
-                        <motion.button
-                          onClick={() => {
-                            setShowPasswordForm(false);
-                            setPasswordForm({ current: '', new: '', confirm: '' });
-                            setPasswordError('');
-                          }}
-                          className="flex-1 px-4 py-3 bg-white/10 text-white font-semibold rounded-xl transition"
-                        >
-                          Cancel
-                        </motion.button>
-                      </div>
+                  {visibleSaved.length < savedPhotos.length && (
+                    <div className="text-center pb-4">
+                      <button
+                        onClick={() => setGalleryPage(galleryPage + 1)}
+                        className="px-5 py-2 bg-white/5 hover:bg-white/10 text-gray-400 text-xs rounded-lg transition"
+                      >
+                        Voir plus
+                      </button>
                     </div>
                   )}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+              ) : (
+                <div className="text-center py-16">
+                  <svg className="w-12 h-12 mx-auto text-gray-700 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <p className="text-gray-500 text-sm">Aucune photo enregistrée</p>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

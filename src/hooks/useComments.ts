@@ -5,7 +5,10 @@ export type Comment = {
   content: string;
   created_at: string;
   user_id: string;
-  user: { email: string };
+  user?: { email?: string };
+  user_display?: string | null;
+  user_avatar?: string | null;
+  profile?: { display_name?: string; avatar_url?: string; username?: string };
 };
 
 export function useComments(photoId: string) {

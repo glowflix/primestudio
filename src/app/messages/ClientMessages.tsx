@@ -37,14 +37,19 @@ export default function ClientMessages() {
   useEffect(() => {
     const supabase = createSupabaseClient();
     const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      const user = data.session?.user;
-      if (!user) {
-        window.location.href = '/auth';
-        return;
+      try {
+        const { data } = await supabase.auth.getSession();
+        const user = data.session?.user;
+        if (!user) {
+          window.location.href = '/auth';
+          return;
+        }
+        setUserId(user.id);
+        setLoading(false);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        console.error(err);
       }
-      setUserId(user.id);
-      setLoading(false);
     };
     init();
   }, []);

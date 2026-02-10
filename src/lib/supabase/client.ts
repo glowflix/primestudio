@@ -20,7 +20,15 @@ export function createSupabaseClient() {
 
   supabaseInstance = createBrowserClient(
     url,
-    anonKey
+    anonKey,
+    {
+      auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    }
   );
 
   return supabaseInstance;

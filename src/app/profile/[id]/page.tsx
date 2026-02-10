@@ -80,17 +80,22 @@ export default function ModelProfile() {
   useEffect(() => {
     const supabase = createSupabaseClient();
     const loadFollowState = async () => {
-      const { data } = await supabase.auth.getSession();
-      const viewerId = data.session?.user?.id || null;
-      setCurrentUserId(viewerId);
-      if (!viewerId || viewerId === userId) return;
+      try {
+        const { data } = await supabase.auth.getSession();
+        const viewerId = data.session?.user?.id || null;
+        setCurrentUserId(viewerId);
+        if (!viewerId || viewerId === userId) return;
 
-      const [followRes, followerRes] = await Promise.all([
-        supabase.from('follows').select('follower_id').eq('follower_id', viewerId).eq('following_id', userId).single(),
-        supabase.from('follows').select('follower_id').eq('follower_id', userId).eq('following_id', viewerId).single(),
-      ]);
-      setIsFollowing(Boolean(followRes.data));
-      setIsFollowedBy(Boolean(followerRes.data));
+        const [followRes, followerRes] = await Promise.all([
+          supabase.from('follows').select('follower_id').eq('follower_id', viewerId).eq('following_id', userId).single(),
+          supabase.from('follows').select('follower_id').eq('follower_id', userId).eq('following_id', viewerId).single(),
+        ]);
+        setIsFollowing(Boolean(followRes.data));
+        setIsFollowedBy(Boolean(followerRes.data));
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        console.error(err);
+      }
     };
     loadFollowState();
   }, [userId]);

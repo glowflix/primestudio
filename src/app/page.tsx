@@ -84,6 +84,14 @@ export default function Home() {
       <section className="min-h-screen relative overflow-hidden pt-10">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-black via-pink-950/20 to-black -z-10" />
+        <div
+          className="absolute inset-0 -z-10 opacity-15 blur-2xl"
+          style={{
+            backgroundImage: "url('/gif/accuel/image de background.gif')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
         
         {/* Animated background elements */}
         <div className="absolute top-20 right-10 w-72 h-72 bg-pink-500/30 rounded-full blur-3xl opacity-20 animate-pulse" />
